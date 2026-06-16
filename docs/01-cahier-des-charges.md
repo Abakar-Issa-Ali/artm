@@ -4,7 +4,7 @@
 **Commanditaire :** Association des Ressortissants Tchadiens à Marseille (ARTM)
 **Compétence CDA visée :** C5 — Analyser les besoins et maquetter une application
 **Version :** 1.0
-**Date :** _à compléter_
+**Date :** 17/06/2026
 **Auteur :** Abakar Issa Ali
 
 ---
