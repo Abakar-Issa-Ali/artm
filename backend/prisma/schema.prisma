@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id                Int      @id @default(autoincrement())
+  libelle           String   @unique @db.VarChar(50)
+  montantCotisation Decimal  @map("montant_cotisation") @db.Decimal(6, 2)
+  membres           Membre[]
+
+  @@map("role")
+}
+
+model Membre {
+  id           Int          @id @default(autoincrement())
+  roleId       Int          @map("role_id")
+  nom          String       @db.VarChar(100)
+  prenom       String       @db.VarChar(100)
+  email        String       @unique @db.VarChar(255)
+  telephone    String?      @db.VarChar(20)
+  motDePasse   String       @map("mot_de_passe") @db.VarChar(255)
+  actif        Boolean      @default(true)
+  dateAdhesion DateTime     @default(now()) @map("date_adhesion") @db.Date
+
+  role         Role         @relation(fields: [roleId], references: [id])
+  cotisations  Cotisation[]
+  paiements    Paiement[]
+
+  @@map("membre")
+}
+
+model Cotisation {
+  id           Int       @id @default(autoincrement())
+  membreId     Int       @map("membre_id")
+  mois         Int       @db.SmallInt
+  annee        Int       @db.SmallInt
+  montant      Decimal   @db.Decimal(6, 2)
+  statut       String    @default("due") @db.VarChar(30)
+  dateEcheance DateTime  @map("date_echeance") @db.Date
+
+  membre       Membre    @relation(fields: [membreId], references: [id])
+  paiement     Paiement?
+
+  @@unique([membreId, mois, annee], name: "uq_cotisation_periode")
+  @@index([membreId])
+  @@index([statut])
+  @@map("cotisation")
+}
+
+model Paiement {
+  id              Int       @id @default(autoincrement())
+  membreId        Int       @map("membre_id")
+  cotisationId    Int       @unique @map("cotisation_id")
+  montant         Decimal   @db.Decimal(6, 2)
+  mode            String    @db.VarChar(20)
+  statut          String    @default("declare") @db.VarChar(30)
+  dateDeclaration DateTime  @default(now()) @map("date_declaration")
+  dateValidation  DateTime? @map("date_validation")
+
+  membre          Membre    @relation(fields: [membreId], references: [id])
+  cotisation      Cotisation @relation(fields: [cotisationId], references: [id])
+  recu            Recu?
+
+  @@index([statut])
+  @@map("paiement")
+}
+
+model Recu {
+  id          Int      @id @default(autoincrement())
+  paiementId  Int      @unique @map("paiement_id")
+  numero      String   @unique @db.VarChar(50)
+  dateEmission DateTime @default(now()) @map("date_emission")
+
+  paiement    Paiement @relation(fields: [paiementId], references: [id])
+
+  @@map("recu")
+}
