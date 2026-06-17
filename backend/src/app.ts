@@ -5,7 +5,9 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js";
 import cotisationRoutes from "./routes/cotisation.routes.js";
 import paiementRoutes from "./routes/paiement.routes.js";
-
+import { connectMongo } from "./config/mongo.js";
+import notificationRoutes from "./routes/notification.routes.js";
+import annonceRoutes from "./routes/annonce.routes.js";
 dotenv.config();
 
 const app = express();
@@ -29,10 +31,14 @@ app.get("/health", (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/cotisations", cotisationRoutes);
 app.use("/api/paiements", paiementRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/annonces", annonceRoutes);
 
 // Démarrage du serveur
-app.listen(PORT, () => {
-  console.log(`Serveur ARTM démarré sur le port ${PORT}`);
+connectMongo().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Serveur ARTM démarré sur le port ${PORT}`);
+  });
 });
 
 export default app;

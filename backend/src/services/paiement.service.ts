@@ -1,6 +1,7 @@
 import prisma from "../config/prisma.js";
 import * as paiementRepo from "../repositories/paiement.repository.js";
 import * as recuRepo from "../repositories/recu.repository.js";
+import * as notificationRepo from "../repositories/notification.repository.js";
 
 // Modes de paiement autorisés
 const MODES_AUTORISES = ["virement", "wero", "stripe"];
@@ -77,6 +78,13 @@ export async function validerPaiement(paiementId: number) {
   ).padStart(2, "0")}-${paiementId}`;
 
   const recu = await recuRepo.create({ paiementId, numero });
+  await notificationRepo.create({
+    membreId: paiement.membreId,
+    type: "paiement_valide",
+    contenu: `Votre paiement de ${paiement.montant}€ pour ${String(
+      paiement.cotisation.mois
+    ).padStart(2, "0")}/${paiement.cotisation.annee} a été validé. Reçu : ${recu.numero}`,
+  });
 
    return { paiement: paiementValide, recu };
 }
@@ -97,6 +105,14 @@ export async function rejeterPaiement(paiementId: number) {
   await prisma.cotisation.update({
     where: { id: paiement.cotisationId },
     data: { statut: "due" },
+  });
+   await notificationRepo.create({
+    membreId: paiement.membreId,
+    type: "paiement_rejete",
+    contenu: `Votre paiement pour ${String(paiement.cotisation.mois).padStart(
+      2,
+      "0"
+    )}/${paiement.cotisation.annee} a été rejeté. Merci de le redéclarer.`,
   });
 
   return { message: "Paiement rejeté" };
