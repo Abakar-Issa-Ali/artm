@@ -36,9 +36,9 @@ app.use("/api/annonces", annonceRoutes);
 
 // Démarrage du serveur
 connectMongo().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Serveur ARTM démarré sur le port ${PORT}`);
-  });
+app.listen(Number(PORT), "0.0.0.0", () => {
+  console.log(`Serveur ARTM démarré sur le port ${PORT}`);
+});
 });
 
 export default app;
