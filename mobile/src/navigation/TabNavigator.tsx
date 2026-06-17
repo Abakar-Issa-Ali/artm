@@ -4,6 +4,7 @@ import DashboardScreen from "../screens/DashboardScreen";
 import PlaceholderScreen from "../screens/PlaceholderScreen";
 import ProfilScreen from "../screens/ProfilScreen";
 import AnnoncesScreen from "../screens/AnnoncesScreen";
+import PaiementScreen from "../screens/PaiementScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -30,7 +31,7 @@ export default function TabNavigator() {
       />
       <Tab.Screen
         name="Payer"
-        children={() => <PlaceholderScreen titre="Paiement" />}
+        component={PaiementScreen}
         options={{ tabBarIcon: ({ color }) => <Icone symbole="€" color={color} /> }}
       />
       <Tab.Screen
