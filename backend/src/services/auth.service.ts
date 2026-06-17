@@ -70,6 +70,8 @@ export async function login(input: LoginInput) {
     throw new Error("Email ou mot de passe incorrect");
   }
 
+  
+
   const motDePasseValide = await verifyPassword(
     input.motDePasse,
     membre.motDePasse
@@ -88,5 +90,25 @@ export async function login(input: LoginInput) {
       email: membre.email,
       role: membre.role.libelle,
     },
+  };
+}
+// Récupère le profil d'un membre par son id
+export async function getProfile(membreId: number) {
+  const membre = await prisma.membre.findUnique({
+    where: { id: membreId },
+    include: { role: true },
+  });
+  if (!membre) {
+    throw new Error("Membre introuvable");
+  }
+  return {
+    id: membre.id,
+    nom: membre.nom,
+    prenom: membre.prenom,
+    email: membre.email,
+    telephone: membre.telephone,
+    role: membre.role.libelle,
+    montantCotisation: membre.role.montantCotisation,
+    dateAdhesion: membre.dateAdhesion,
   };
 }

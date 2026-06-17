@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as authService from "../services/auth.service.js";
+import { AuthRequest } from "../middlewares/auth.middleware.js";
 
 export async function register(req: Request, res: Response) {
   try {
@@ -20,5 +21,15 @@ export async function login(req: Request, res: Response) {
     const message =
       error instanceof Error ? error.message : "Erreur lors de la connexion";
     return res.status(401).json({ error: message });
+  }
+}
+export async function me(req: AuthRequest, res: Response) {
+  try {
+    const profile = await authService.getProfile(req.membre!.id);
+    return res.status(200).json(profile);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Erreur lors de la récupération";
+    return res.status(404).json({ error: message });
   }
 }
