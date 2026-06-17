@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js";
+import cotisationRoutes from "./routes/cotisation.routes.js";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.get("/health", (_req, res) => {
 
 // Routes d'authentification
 app.use("/api/auth", authRoutes);
+app.use("/api/cotisations", cotisationRoutes);
 
 // Démarrage du serveur
 app.listen(PORT, () => {
