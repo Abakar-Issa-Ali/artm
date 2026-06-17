@@ -3,6 +3,7 @@ import { Text } from "react-native";
 import DashboardScreen from "../screens/DashboardScreen";
 import PlaceholderScreen from "../screens/PlaceholderScreen";
 import ProfilScreen from "../screens/ProfilScreen";
+import AnnoncesScreen from "../screens/AnnoncesScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -34,7 +35,7 @@ export default function TabNavigator() {
       />
       <Tab.Screen
         name="Annonces"
-        children={() => <PlaceholderScreen titre="Annonces" />}
+        component={AnnoncesScreen}
         options={{ tabBarIcon: ({ color }) => <Icone symbole="►" color={color} /> }}
       />
       <Tab.Screen
