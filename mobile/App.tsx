@@ -5,6 +5,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import LoginScreen from "./src/screens/LoginScreen";
 import HomeScreen from "./src/screens/HomeScreen";
+import TabNavigator from "./src/navigation/TabNavigator";
 
 function Routes() {
   const { membre, chargement } = useAuth();
@@ -19,7 +20,7 @@ function Routes() {
   }
 
   // Si pas connecté → login, sinon → l'app
-  return membre ? <HomeScreen /> : <LoginScreen />;
+  return membre ? <TabNavigator /> : <LoginScreen />;
 }
 
 export default function App() {
