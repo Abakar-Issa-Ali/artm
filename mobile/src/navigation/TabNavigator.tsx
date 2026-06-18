@@ -5,10 +5,11 @@ import PlaceholderScreen from "../screens/PlaceholderScreen";
 import ProfilScreen from "../screens/ProfilScreen";
 import AnnoncesScreen from "../screens/AnnoncesScreen";
 import PaiementScreen from "../screens/PaiementScreen";
+import { Ionicons } from "@expo/vector-icons";
 
 const Tab = createBottomTabNavigator();
 
-// Petit composant icône texte simple (on mettra de vraies icônes plus tard)
+// Petit composant icône texte simple
 function Icone({ symbole, color }: { symbole: string; color: string }) {
   return <Text style={{ fontSize: 20, color }}>{symbole}</Text>;
 }
@@ -24,25 +25,25 @@ export default function TabNavigator() {
         tabBarLabelStyle: { fontSize: 11 },
       }}
     >
-      <Tab.Screen
+<Tab.Screen
         name="Accueil"
         component={DashboardScreen}
-        options={{ tabBarIcon: ({ color }) => <Icone symbole="⌂" color={color} /> }}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Payer"
         component={PaiementScreen}
-        options={{ tabBarIcon: ({ color }) => <Icone symbole="€" color={color} /> }}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="card-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Annonces"
         component={AnnoncesScreen}
-        options={{ tabBarIcon: ({ color }) => <Icone symbole="►" color={color} /> }}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="megaphone-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Profil"
         component={ProfilScreen}
-        options={{ tabBarIcon: ({ color }) => <Icone symbole="●" color={color} /> }}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} /> }}
       />
     </Tab.Navigator>
   );
