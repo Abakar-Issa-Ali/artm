@@ -8,6 +8,7 @@ import paiementRoutes from "./routes/paiement.routes.js";
 import { connectMongo } from "./config/mongo.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import annonceRoutes from "./routes/annonce.routes.js";
+import membreRoutes from "./routes/membre.routes.js";
 dotenv.config();
 
 const app = express();
@@ -33,6 +34,7 @@ app.use("/api/cotisations", cotisationRoutes);
 app.use("/api/paiements", paiementRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/annonces", annonceRoutes);
+app.use("/api/membres", membreRoutes);
 
 // Démarrage du serveur
 connectMongo().then(() => {

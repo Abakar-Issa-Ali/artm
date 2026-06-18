@@ -5,7 +5,7 @@ import {
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
-export default function LoginScreen() {
+export default function LoginScreen({ onInscription }: { onInscription: () => void }) {
   const { connexion } = useAuth();
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
@@ -72,12 +72,17 @@ export default function LoginScreen() {
             <Text style={styles.boutonTexte}>Se connecter</Text>
           )}
         </TouchableOpacity>
+          <TouchableOpacity onPress={onInscription} style={styles.lien}>
+          <Text style={styles.lienTexte}>Pas encore de compte ? Créer un compte</Text>
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  lien: { marginTop: 16, alignItems: "center" },
+  lienTexte: { color: "#15326B", fontSize: 13.5 },
   container: { flex: 1, backgroundColor: "#15326B", justifyContent: "center", padding: 24 },
   logo: { alignItems: "center", marginBottom: 8 },
   logoTexte: { color: "#E8A33D", fontSize: 44, fontWeight: "500", letterSpacing: 2 },

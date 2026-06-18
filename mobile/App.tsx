@@ -6,11 +6,14 @@ import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import LoginScreen from "./src/screens/LoginScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import TabNavigator from "./src/navigation/TabNavigator";
+import TresorierTabNavigator from "./src/navigation/TresorierTabNavigator";
+import { useState } from "react";
+import RegisterScreen from "./src/screens/RegisterScreen";
 
 function Routes() {
   const { membre, chargement } = useAuth();
+  const [afficheInscription, setAfficheInscription] = useState(false);
 
-  // Pendant la vérification du token au démarrage
   if (chargement) {
     return (
       <View style={styles.loader}>
@@ -19,8 +22,13 @@ function Routes() {
     );
   }
 
-  // Si pas connecté → login, sinon → l'app
-  return membre ? <TabNavigator /> : <LoginScreen />;
+  if (!membre) {
+    return afficheInscription
+      ? <RegisterScreen onRetour={() => setAfficheInscription(false)} />
+      : <LoginScreen onInscription={() => setAfficheInscription(true)} />;
+  }
+
+  return membre.role === "tresorier" ? <TresorierTabNavigator /> : <TabNavigator />;
 }
 
 export default function App() {
