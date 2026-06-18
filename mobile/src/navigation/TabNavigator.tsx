@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text } from "react-native";
 import DashboardScreen from "../screens/DashboardScreen";
-import PlaceholderScreen from "../screens/PlaceholderScreen";
+// import PlaceholderScreen from "../screens/PlaceholderScreen";
 import ProfilScreen from "../screens/ProfilScreen";
 import AnnoncesScreen from "../screens/AnnoncesScreen";
 import PaiementScreen from "../screens/PaiementScreen";
@@ -9,10 +9,6 @@ import { Ionicons } from "@expo/vector-icons";
 
 const Tab = createBottomTabNavigator();
 
-// Petit composant icône texte simple
-function Icone({ symbole, color }: { symbole: string; color: string }) {
-  return <Text style={{ fontSize: 20, color }}>{symbole}</Text>;
-}
 
 export default function TabNavigator() {
   return (

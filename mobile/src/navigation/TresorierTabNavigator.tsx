@@ -1,15 +1,11 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Text } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import ValidationScreen from "../screens/tresorier/ValidationScreen";
 import MembresScreen from "../screens/tresorier/MembresScreen";
 import PublierAnnonceScreen from "../screens/tresorier/PublierAnnonceScreen";
 import ProfilScreen from "../screens/ProfilScreen";
 
 const Tab = createBottomTabNavigator();
-
-function Icone({ symbole, color }: { symbole: string; color: string }) {
-  return <Text style={{ fontSize: 20, color }}>{symbole}</Text>;
-}
 
 export default function TresorierTabNavigator() {
   return (
@@ -25,22 +21,22 @@ export default function TresorierTabNavigator() {
       <Tab.Screen
         name="Valider"
         component={ValidationScreen}
-        options={{ tabBarIcon: ({ color }) => <Icone symbole="✓" color={color} /> }}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-circle-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Membres"
         component={MembresScreen}
-        options={{ tabBarIcon: ({ color }) => <Icone symbole="☰" color={color} /> }}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Annoncer"
         component={PublierAnnonceScreen}
-        options={{ tabBarIcon: ({ color }) => <Icone symbole="✎" color={color} /> }}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="create-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Profil"
         component={ProfilScreen}
-        options={{ tabBarIcon: ({ color }) => <Icone symbole="●" color={color} /> }}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} /> }}
       />
     </Tab.Navigator>
   );
