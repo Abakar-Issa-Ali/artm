@@ -28,3 +28,14 @@ export async function getMembres() {
   const reponse = await api.get("/membres");
   return reponse.data;
 }
+// Modifie une annonce
+export async function modifierAnnonce(id: string, titre: string, contenu: string) {
+  const reponse = await api.patch(`/annonces/${id}`, { titre, contenu });
+  return reponse.data;
+}
+
+// Supprime une annonce
+export async function supprimerAnnonce(id: string) {
+  const reponse = await api.delete(`/annonces/${id}`);
+  return reponse.data;
+}

@@ -2,7 +2,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import ValidationScreen from "../screens/tresorier/ValidationScreen";
 import MembresScreen from "../screens/tresorier/MembresScreen";
-import PublierAnnonceScreen from "../screens/tresorier/PublierAnnonceScreen";
+import PublierAnnonceScreen from "../screens/tresorier/GestionAnnoncesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
 
 const Tab = createBottomTabNavigator();

@@ -2,27 +2,52 @@ import { useState, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { getAnnonces, getNotifications } from "../services/communication.service";
+import { Ionicons } from "@expo/vector-icons";
 
 // Choisit l'icône et la couleur selon le type d'élément
 function styleElement(type: string) {
   switch (type) {
-    case "paiement_valide": return { symbole: "✓", couleur: "#0F6E56" };
-    case "paiement_rejete": return { symbole: "✕", couleur: "#A32D2D" };
-    case "relance": return { symbole: "!", couleur: "#BA7517" };
-    case "annonce": return { symbole: "▸", couleur: "#E8A33D" };
-    default: return { symbole: "•", couleur: "#15326B" };
+    case "paiement_valide": return { icone: "checkmark-circle", couleur: "#0F6E56" };
+    case "paiement_rejete": return { icone: "close-circle", couleur: "#A32D2D" };
+    case "relance": return { icone: "alert-circle", couleur: "#BA7517" };
+    case "annonce": return { icone: "megaphone", couleur: "#E8A33D" };
+    default: return { icone: "notifications", couleur: "#15326B" };
   }
 }
 
-// Affiche "il y a X jours" à partir d'une date
-function tempsEcoule(date: string) {
-  const diff = Date.now() - new Date(date).getTime();
-  const jours = Math.floor(diff / 86400000);
-  if (jours === 0) return "Aujourd'hui";
-  if (jours === 1) return "Hier";
-  if (jours < 7) return `Il y a ${jours} jours`;
-  const semaines = Math.floor(jours / 7);
-  return semaines === 1 ? "Il y a 1 semaine" : `Il y a ${semaines} semaines`;
+// Affiche de date 
+function tempsEcoule(dateStr: string) {
+  const date = new Date(dateStr);
+  const maintenant = new Date();
+  const diffMs = maintenant.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffH = Math.floor(diffMs / 3600000);
+
+  // Moins d'une minute
+  if (diffMin < 1) return "À l'instant";
+  // Moins d'une heure : en minutes
+  if (diffMin < 60) return `Il y a ${diffMin} min`;
+  // Moins de 24h : en heures
+  if (diffH < 24) return `Il y a ${diffH} h`;
+
+  // Heure formatée (ex: "14:30")
+  const heure = date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+  // Comparaison par jours calendaires
+  const jourDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const jourMaintenant = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate());
+  const diffJours = Math.round((jourMaintenant.getTime() - jourDate.getTime()) / 86400000);
+
+  // Hier
+  if (diffJours === 1) return `Hier à ${heure}`;
+  // Cette semaine : jour de la semaine (ex: "Mercredi à 14:30")
+  if (diffJours < 7) {
+    const jour = date.toLocaleDateString("fr-FR", { weekday: "long" });
+    const jourCapital = jour.charAt(0).toUpperCase() + jour.slice(1);
+    return `${jourCapital} à ${heure}`;
+  }
+  // Au-delà : date complète (ex: "12 juin 2026")
+  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 }
 
 export default function AnnoncesScreen() {
@@ -93,7 +118,7 @@ export default function AnnoncesScreen() {
             return (
               <View key={e.id} style={styles.carte}>
                 <View style={styles.carteHead}>
-                  <Text style={[styles.symbole, { color: s.couleur }]}>{s.symbole}</Text>
+                  <Ionicons name={s.icone as any} size={17} color={s.couleur} style={{ marginRight: 8 }} />
                   <Text style={styles.carteTitre}>{e.titre}</Text>
                 </View>
                 <Text style={styles.carteContenu}>{e.contenu}</Text>
