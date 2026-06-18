@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import api from "../config/api";
+import ModifierProfilScreen from "./ModifierProfilScreen";
 
 const MOIS = ["", "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
@@ -10,6 +11,7 @@ export default function ProfilScreen() {
   const { membre, deconnexion } = useAuth();
   const [profil, setProfil] = useState<any>(null);
   const [chargement, setChargement] = useState(true);
+  const [edition, setEdition] = useState(false);
 
   const charger = useCallback(async () => {
     try {
@@ -29,6 +31,15 @@ export default function ProfilScreen() {
       { text: "Annuler", style: "cancel" },
       { text: "Se déconnecter", style: "destructive", onPress: deconnexion },
     ]);
+  }
+  if (edition && profil) {
+    return (
+      <ModifierProfilScreen
+        profil={profil}
+        onTermine={() => { setEdition(false); charger(); }}
+        onAnnuler={() => setEdition(false)}
+      />
+    );
   }
 
   if (chargement) {
@@ -66,6 +77,10 @@ export default function ProfilScreen() {
           <Ligne label="Rôle" valeur={`${profil?.role} · ${Number(profil?.montantCotisation).toFixed(2)} €/mois`} derniere />
         </View>
 
+        <TouchableOpacity style={styles.modifier} onPress={() => setEdition(true)}>
+          <Text style={styles.modifierTexte}>Modifier mon profil</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.deconnexion} onPress={confirmerDeconnexion}>
           <Text style={styles.deconnexionTexte}>Se déconnecter</Text>
         </TouchableOpacity>
@@ -84,6 +99,8 @@ function Ligne({ label, valeur, derniere }: { label: string; valeur: string; der
 }
 
 const styles = StyleSheet.create({
+  modifier: { backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#d8d2c4", borderRadius: 12, paddingVertical: 13, alignItems: "center", marginTop: 16 },
+  modifierTexte: { color: "#15326B", fontWeight: "500", fontSize: 14 },  
   page: { flex: 1, backgroundColor: "#FBF8F2" },
   loader: { flex: 1, backgroundColor: "#FBF8F2", alignItems: "center", justifyContent: "center" },
   header: { backgroundColor: "#15326B", paddingTop: 60, paddingBottom: 28, alignItems: "center" },

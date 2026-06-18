@@ -33,3 +33,13 @@ export async function me(req: AuthRequest, res: Response) {
     return res.status(404).json({ error: message });
   }
 }
+export async function updateMe(req: AuthRequest, res: Response) {
+  try {
+    const { nom, prenom, telephone } = req.body;
+    const profile = await authService.updateProfile(req.membre!.id, { nom, prenom, telephone });
+    return res.status(200).json(profile);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur lors de la mise à jour";
+    return res.status(400).json({ error: message });
+  }
+}

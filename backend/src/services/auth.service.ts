@@ -112,3 +112,28 @@ export async function getProfile(membreId: number) {
     dateAdhesion: membre.dateAdhesion,
   };
 }
+// Met à jour le profil d'un membre
+export async function updateProfile(
+  membreId: number,
+  data: { nom?: string; prenom?: string; telephone?: string }
+) {
+  const membre = await prisma.membre.update({
+    where: { id: membreId },
+    data: {
+      nom: data.nom,
+      prenom: data.prenom,
+      telephone: data.telephone,
+    },
+    include: { role: true },
+  });
+  return {
+    id: membre.id,
+    nom: membre.nom,
+    prenom: membre.prenom,
+    email: membre.email,
+    telephone: membre.telephone,
+    role: membre.role.libelle,
+    montantCotisation: membre.role.montantCotisation,
+    dateAdhesion: membre.dateAdhesion,
+  };
+}
