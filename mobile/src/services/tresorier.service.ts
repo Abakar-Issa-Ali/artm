@@ -39,3 +39,22 @@ export async function supprimerAnnonce(id: string) {
   const reponse = await api.delete(`/annonces/${id}`);
   return reponse.data;
 }
+export async function changerRole(membreId: number, role: string) {
+  const reponse = await api.patch(`/membres/${membreId}/role`, { role });
+  return reponse.data;
+}
+
+export async function desactiverMembre(membreId: number) {
+  const reponse = await api.patch(`/membres/${membreId}/desactiver`);
+  return reponse.data;
+}
+
+export async function reactiverMembre(membreId: number) {
+  const reponse = await api.patch(`/membres/${membreId}/reactiver`);
+  return reponse.data;
+}
+
+export async function supprimerMembre(membreId: number) {
+  const reponse = await api.delete(`/membres/${membreId}`);
+  return reponse.data;
+}

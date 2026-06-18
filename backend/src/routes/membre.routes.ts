@@ -26,4 +26,85 @@ const router = Router();
 // Réservé au trésorier
 router.get("/", authenticate, authorize("tresorier"), membreController.liste);
 
+/**
+ * @swagger
+ * /api/membres/{id}/role:
+ *   patch:
+ *     summary: Change le rôle d'un membre (trésorier)
+ *     tags: [Membres]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [role]
+ *             properties:
+ *               role: { type: string, example: bureau }
+ *     responses:
+ *       200: { description: Rôle modifié }
+ */
+router.patch("/:id/role", authenticate, authorize("tresorier"), membreController.changerRole);
+
+/**
+ * @swagger
+ * /api/membres/{id}/desactiver:
+ *   patch:
+ *     summary: Désactive un membre (trésorier)
+ *     tags: [Membres]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200: { description: Membre désactivé }
+ */
+router.patch("/:id/desactiver", authenticate, authorize("tresorier"), membreController.desactiver);
+
+/**
+ * @swagger
+ * /api/membres/{id}/reactiver:
+ *   patch:
+ *     summary: Réactive un membre (trésorier)
+ *     tags: [Membres]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200: { description: Membre réactivé }
+ */
+router.patch("/:id/reactiver", authenticate, authorize("tresorier"), membreController.reactiver);
+
+/**
+ * @swagger
+ * /api/membres/{id}:
+ *   delete:
+ *     summary: Supprime définitivement un membre (trésorier)
+ *     tags: [Membres]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200: { description: Membre supprimé }
+ */
+router.delete("/:id", authenticate, authorize("tresorier"), membreController.supprimer);
+
 export default router;
