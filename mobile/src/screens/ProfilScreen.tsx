@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, Modal, Pressable } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import api from "../config/api";
@@ -12,6 +12,7 @@ export default function ProfilScreen() {
   const [profil, setProfil] = useState<any>(null);
   const [chargement, setChargement] = useState(true);
   const [edition, setEdition] = useState(false);
+  const [confirmDeco, setConfirmDeco] = useState(false);
 
   const charger = useCallback(async () => {
     try {
@@ -27,11 +28,9 @@ export default function ProfilScreen() {
   useFocusEffect(useCallback(() => { charger(); }, [charger]));
 
   function confirmerDeconnexion() {
-    Alert.alert("Déconnexion", "Voulez-vous vraiment vous déconnecter ?", [
-      { text: "Annuler", style: "cancel" },
-      { text: "Se déconnecter", style: "destructive", onPress: deconnexion },
-    ]);
+      setConfirmDeco(true);
   }
+
   if (edition && profil) {
     return (
       <ModifierProfilScreen
@@ -85,6 +84,22 @@ export default function ProfilScreen() {
           <Text style={styles.deconnexionTexte}>Se déconnecter</Text>
         </TouchableOpacity>
       </View>
+      <Modal visible={confirmDeco} transparent animationType="fade" onRequestClose={() => setConfirmDeco(false)}>
+        <Pressable style={styles.overlay} onPress={() => setConfirmDeco(false)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <Text style={styles.sheetTitre}>Déconnexion</Text>
+            <Text style={styles.sheetSous}>Voulez-vous vraiment vous déconnecter ?</Text>
+
+            <TouchableOpacity style={styles.sheetDeco} onPress={deconnexion}>
+              <Text style={styles.sheetDecoTexte}>Se déconnecter</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.sheetAnnuler} onPress={() => setConfirmDeco(false)}>
+              <Text style={styles.sheetAnnulerTexte}>Annuler</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -115,4 +130,12 @@ const styles = StyleSheet.create({
   ligneValeur: { color: "#2a2a28", fontSize: 14.5 },
   deconnexion: { marginTop: 20, alignItems: "center", paddingVertical: 14 },
   deconnexionTexte: { color: "#A32D2D", fontWeight: "500", fontSize: 15 },
+  overlay: { flex: 1, backgroundColor: "rgba(21,50,107,0.45)", justifyContent: "flex-end" },
+  sheet: { backgroundColor: "#FBF8F2", borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 22, paddingBottom: 32 },
+  sheetTitre: { fontSize: 18, fontWeight: "500", color: "#15326B", textAlign: "center" },
+  sheetSous: { fontSize: 13, color: "#8a857c", textAlign: "center", marginTop: 4, marginBottom: 20 },
+  sheetDeco: { backgroundColor: "#A32D2D", borderRadius: 12, paddingVertical: 14, marginBottom: 9 },
+  sheetDecoTexte: { color: "#fff", fontSize: 15, fontWeight: "500", textAlign: "center" },
+  sheetAnnuler: { paddingVertical: 13 },
+  sheetAnnulerTexte: { fontSize: 14, color: "#8a857c", textAlign: "center" },
 });

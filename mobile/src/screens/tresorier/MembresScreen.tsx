@@ -1,12 +1,14 @@
 import { useState, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity, Modal, Alert, Pressable } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { getMembres, changerRole, desactiverMembre, reactiverMembre, supprimerMembre } from "../../services/tresorier.service";
+import { getMembres, getResume, changerRole, desactiverMembre, reactiverMembre, supprimerMembre, relancerMembre } from "../../services/tresorier.service";
 
 export default function MembresScreen() {
   const [membres, setMembres] = useState<any[]>([]);
   const [chargement, setChargement] = useState(true);
   const [refresh, setRefresh] = useState(false);
+  const [resume, setResume] = useState<any>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   // Membre sélectionné pour le menu d'actions
   const [selection, setSelection] = useState<any>(null);
@@ -15,8 +17,9 @@ export default function MembresScreen() {
 
   const charger = useCallback(async () => {
     try {
-      const data = await getMembres();
+  const [data, resumeData] = await Promise.all([getMembres(), getResume()]);
       setMembres(data);
+      setResume(resumeData);
     } catch (error) {
       console.log("Erreur membres", error);
     } finally {
@@ -39,6 +42,15 @@ export default function MembresScreen() {
       await charger();
     } catch (error: any) {
       Alert.alert("Erreur", error.response?.data?.error || "Action impossible");
+    }
+  }
+async function relancer(m: any) {
+    try {
+      await relancerMembre(m.id);
+      setToast(`Relance envoyée à ${m.prenom}`);
+      setTimeout(() => setToast(null), 2500);
+    } catch (error: any) {
+      Alert.alert("Erreur", error.response?.data?.error || "Relance impossible");
     }
   }
 
@@ -70,6 +82,36 @@ export default function MembresScreen() {
         contentContainerStyle={styles.contenu}
         refreshControl={<RefreshControl refreshing={refresh} onRefresh={() => { setRefresh(true); charger(); }} />}
       >
+        {/* Résumé du tableau de bord */}
+        {resume && (
+          <View style={styles.resume}>
+            <Text style={styles.resumeTitre}>Résumé</Text>
+            <Text style={styles.resumeLigne}>Membres actifs : <Text style={styles.resumeValeur}>{resume.membresActifs}</Text></Text>
+            <Text style={styles.resumeLigne}>Encaissé ce mois : <Text style={styles.resumeValeur}>{Number(resume.totalEncaisse).toFixed(2)} €</Text> ({resume.nombrePayees}/{resume.nombreTotal})</Text>
+            <Text style={styles.resumeLigne}>Taux de paiement : <Text style={styles.resumeValeur}>{resume.tauxPaiement}%</Text></Text>
+          </View>
+        )}
+
+        {/* Membres en retard à relancer */}
+        {membres.filter((m) => !m.aJour && m.actif).length > 0 && (
+          <>
+            <Text style={styles.section}>Membres en retard</Text>
+            {membres.filter((m) => !m.aJour && m.actif).map((m) => (
+              <View key={"retard" + m.id} style={styles.retardLigne}>
+                <View style={styles.infos}>
+                  <Text style={styles.nom}>{m.prenom} {m.nom}</Text>
+                  <Text style={styles.retardTexte}>{m.nombreEnRetard} mois en retard</Text>
+                </View>
+                <TouchableOpacity style={styles.relanceBtn} onPress={() => relancer(m)}>
+                  <Text style={styles.relanceTexte}>Relancer</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </>
+        )}
+
+        <Text style={styles.section}>Tous les membres</Text>
+
         {membres.map((m) => {
           const initiales = `${m.prenom?.[0] || ""}${m.nom?.[0] || ""}`.toUpperCase();
           return (
@@ -143,6 +185,11 @@ export default function MembresScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+      {toast && (
+        <View style={styles.toast}>
+          <Text style={styles.toastTexte}>{toast}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -172,4 +219,30 @@ const styles = StyleSheet.create({
   optionTexte: { fontSize: 15, color: "#15326B", fontWeight: "500", textAlign: "center" },
   annulerBtn: { paddingVertical: 13, marginTop: 4 },
   annulerTexte: { fontSize: 14, color: "#8a857c", textAlign: "center" },
+  resume: { backgroundColor: "#EAF0FB", borderRadius: 14, padding: 16, marginBottom: 18 },
+  resumeTitre: { fontSize: 15, fontWeight: "500", color: "#15326B", marginBottom: 10 },
+  resumeLigne: { fontSize: 13.5, color: "#3a4a6b", marginBottom: 5 },
+  resumeValeur: { fontWeight: "500", color: "#15326B" },
+  section: { color: "#6b6760", fontSize: 13, fontWeight: "500", marginBottom: 10, marginTop: 4 },
+  retardLigne: { flexDirection: "row", alignItems: "center", backgroundColor: "#FCEBEB", borderRadius: 12, padding: 12, marginBottom: 8 },
+  retardTexte: { fontSize: 12, color: "#A32D2D", marginTop: 2 },
+  relanceBtn: { backgroundColor: "#E8A33D", borderRadius: 9, paddingVertical: 8, paddingHorizontal: 14 },
+  relanceTexte: { color: "#15326B", fontWeight: "500", fontSize: 13 },
+  toast: {
+  position: "absolute",
+  bottom: 30,
+  left: 20,
+  right: 20,
+  backgroundColor: "#15326B",
+  borderRadius: 12,
+  paddingVertical: 14,
+  paddingHorizontal: 18,
+  alignItems: "center",
+  shadowColor: "#000",
+  shadowOpacity: 0.2,
+  shadowRadius: 8,
+  shadowOffset: { width: 0, height: 3 },
+  elevation: 5,
+},
+toastTexte: { color: "#FBF8F2", fontSize: 14, fontWeight: "500" },
 });

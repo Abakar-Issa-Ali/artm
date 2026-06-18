@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import * as notificationRepo from "../repositories/notification.repository.js";
 
 // Récupère tous les membres actifs avec un résumé de leur statut de cotisation
 export async function getTousMembres() {
@@ -81,4 +82,44 @@ export async function supprimerMembre(membreId: number) {
     await tx.membre.delete({ where: { id: membreId } });
   });
   return { message: "Membre supprimé définitivement" };
+}
+// Calcule un résumé global pour le tableau de bord trésorier
+export async function getResume() {
+  const membresActifs = await prisma.membre.count({ where: { actif: true } });
+
+  // Cotisations du mois courant
+  const maintenant = new Date();
+  const mois = maintenant.getMonth() + 1;
+  const annee = maintenant.getFullYear();
+
+  const cotisationsDuMois = await prisma.cotisation.findMany({
+    where: { mois, annee },
+  });
+  const payees = cotisationsDuMois.filter((c) => c.statut === "payee");
+  const totalEncaisse = payees.reduce((s, c) => s + Number(c.montant), 0);
+  const tauxPaiement = cotisationsDuMois.length > 0
+    ? Math.round((payees.length / cotisationsDuMois.length) * 100)
+    : 0;
+
+  return {
+    membresActifs,
+    totalEncaisse,
+    nombrePayees: payees.length,
+    nombreTotal: cotisationsDuMois.length,
+    tauxPaiement,
+  };
+}
+
+// Envoie une relance (notification) à un membre en retard
+export async function relancerMembre(membreId: number) {
+  const membre = await prisma.membre.findUnique({ where: { id: membreId } });
+  if (!membre) {
+    throw new Error("Membre introuvable");
+  }
+  await notificationRepo.create({
+    membreId,
+    type: "relance",
+    contenu: "Rappel : vous avez des cotisations en attente de règlement. Merci de régulariser votre situation.",
+  });
+  return { message: "Relance envoyée" };
 }

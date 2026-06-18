@@ -56,3 +56,22 @@ export async function supprimer(req: AuthRequest, res: Response) {
     return res.status(400).json({ error: message });
   }
 }
+export async function resume(_req: AuthRequest, res: Response) {
+  try {
+    const data = await membreService.getResume();
+    return res.status(200).json(data);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur";
+    return res.status(400).json({ error: message });
+  }
+}
+
+export async function relancer(req: AuthRequest, res: Response) {
+  try {
+    const result = await membreService.relancerMembre(Number(req.params.id));
+    return res.status(200).json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur";
+    return res.status(400).json({ error: message });
+  }
+}

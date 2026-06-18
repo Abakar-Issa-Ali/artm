@@ -58,3 +58,14 @@ export async function supprimerMembre(membreId: number) {
   const reponse = await api.delete(`/membres/${membreId}`);
   return reponse.data;
 }
+// Récupère le résumé du tableau de bord
+export async function getResume() {
+  const reponse = await api.get("/membres/resume");
+  return reponse.data;
+}
+
+// Envoie une relance à un membre
+export async function relancerMembre(membreId: number) {
+  const reponse = await api.post(`/membres/${membreId}/relancer`);
+  return reponse.data;
+}
