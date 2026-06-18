@@ -6,7 +6,7 @@ import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import LoginScreen from "./src/screens/LoginScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import TabNavigator from "./src/navigation/TabNavigator";
-import TresorierTabNavigator from "./src/navigation/TresorierTabNavigator";
+import TresorierContainer from "./src/navigation/TresorierContainer";
 import { useState } from "react";
 import RegisterScreen from "./src/screens/RegisterScreen";
 
@@ -28,7 +28,7 @@ function Routes() {
       : <LoginScreen onInscription={() => setAfficheInscription(true)} />;
   }
 
-  return membre.role === "tresorier" ? <TresorierTabNavigator /> : <TabNavigator />;
+ return membre.role === "tresorier" ? <TresorierContainer /> : <TabNavigator />;
 }
 
 export default function App() {
