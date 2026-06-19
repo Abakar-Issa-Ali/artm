@@ -56,6 +56,11 @@ jobs:
         env:
           DATABASE_URL: postgresql://artm_user:artm_password@localhost:5432/artm_db
 
+      - name: Seed des données
+        run: npx tsx prisma/seed.ts
+        env:
+          DATABASE_URL: postgresql://artm_user:artm_password@localhost:5432/artm_db    
+
       - name: Lancer les tests
         run: npm test
         env:
