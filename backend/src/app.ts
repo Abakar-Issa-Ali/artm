@@ -8,6 +8,9 @@ import paiementRoutes from "./routes/paiement.routes.js";
 import { connectMongo } from "./config/mongo.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import annonceRoutes from "./routes/annonce.routes.js";
+import membreRoutes from "./routes/membre.routes.js";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger.js";
 dotenv.config();
 
 const app = express();
@@ -33,12 +36,17 @@ app.use("/api/cotisations", cotisationRoutes);
 app.use("/api/paiements", paiementRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/annonces", annonceRoutes);
+app.use("/api/membres", membreRoutes);
+// Documentation Swagger
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Démarrage du serveur
-connectMongo().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Serveur ARTM démarré sur le port ${PORT}`);
+if (process.env.NODE_ENV !== "test") {
+  connectMongo().then(() => {
+    app.listen(Number(PORT), "0.0.0.0", () => {
+      console.log(`Serveur ARTM démarré sur le port ${PORT}`);
+    });
   });
-});
+}
 
 export default app;

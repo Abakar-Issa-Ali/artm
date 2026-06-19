@@ -1,0 +1,46 @@
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Text } from "react-native";
+import DashboardScreen from "../screens/DashboardScreen";
+// import PlaceholderScreen from "../screens/PlaceholderScreen";
+import ProfilScreen from "../screens/ProfilScreen";
+import AnnoncesScreen from "../screens/AnnoncesScreen";
+import PaiementScreen from "../screens/PaiementScreen";
+import { Ionicons } from "@expo/vector-icons";
+
+const Tab = createBottomTabNavigator();
+
+
+export default function TabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: "#15326B",
+        tabBarInactiveTintColor: "#bdb7a8",
+        tabBarStyle: { backgroundColor: "#fff", borderTopColor: "#ece6d8", height: 60, paddingBottom: 8, paddingTop: 8 },
+        tabBarLabelStyle: { fontSize: 11 },
+      }}
+    >
+<Tab.Screen
+        name="Accueil"
+        component={DashboardScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} /> }}
+      />
+      <Tab.Screen
+        name="Payer"
+        component={PaiementScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="card-outline" size={size} color={color} /> }}
+      />
+      <Tab.Screen
+        name="Annonces"
+        component={AnnoncesScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="megaphone-outline" size={size} color={color} /> }}
+      />
+      <Tab.Screen
+        name="Profil"
+        component={ProfilScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} /> }}
+      />
+    </Tab.Navigator>
+  );
+}

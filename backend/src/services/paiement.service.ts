@@ -2,6 +2,7 @@ import prisma from "../config/prisma.js";
 import * as paiementRepo from "../repositories/paiement.repository.js";
 import * as recuRepo from "../repositories/recu.repository.js";
 import * as notificationRepo from "../repositories/notification.repository.js";
+import { genererNumeroRecu } from "../utils/cotisation.utils.js";
 
 // Modes de paiement autorisés
 const MODES_AUTORISES = ["virement", "wero", "stripe"];
@@ -73,9 +74,11 @@ export async function validerPaiement(paiementId: number) {
   });
 
   // Génère un reçu unique (RG6)
-  const numero = `ARTM-${paiement.cotisation.annee}-${String(
-    paiement.cotisation.mois
-  ).padStart(2, "0")}-${paiementId}`;
+  const numero = genererNumeroRecu(
+    paiement.cotisation.annee,
+    paiement.cotisation.mois,
+    paiementId
+  );
 
   const recu = await recuRepo.create({ paiementId, numero });
   await notificationRepo.create({

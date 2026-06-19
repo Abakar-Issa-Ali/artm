@@ -1,5 +1,6 @@
 import * as cotisationRepo from "../repositories/cotisation.repository.js";
 import prisma from "../config/prisma.js";
+import { calculerStatutInitial } from "../utils/cotisation.utils.js";
 
 // Génère les échéances manquantes d'un membre, de son adhésion au mois courant
 export async function genererEcheances(membreId: number) {
@@ -33,10 +34,7 @@ export async function genererEcheances(membreId: number) {
       const dateEcheance = new Date(annee, mois, 0); // jour 0 du mois suivant = dernier jour
 
       // Statut initial : "en_retard" si le mois est passé, sinon "due"
-      const moisPasse =
-        annee < maintenant.getFullYear() ||
-        (annee === maintenant.getFullYear() && mois < maintenant.getMonth() + 1);
-      const statut = moisPasse ? "en_retard" : "due";
+      const statut = calculerStatutInitial(mois, annee, maintenant);
 
       const echeance = await cotisationRepo.create({
         membreId,
