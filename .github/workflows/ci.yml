@@ -1,0 +1,68 @@
+name: CI
+
+# Déclenche le workflow à chaque push et pull request
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Base PostgreSQL temporaire pour les tests d'intégration
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: artm_user
+          POSTGRES_PASSWORD: artm_password
+          POSTGRES_DB: artm_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Générer le client Prisma
+        run: npx prisma generate
+
+      - name: Appliquer les migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://artm_user:artm_password@localhost:5432/artm_db
+
+      - name: Lancer les tests
+        run: npm test
+        env:
+          DATABASE_URL: postgresql://artm_user:artm_password@localhost:5432/artm_db
+          MONGO_URL: mongodb://localhost:27017/artm
+          JWT_SECRET: secret_de_test
+          JWT_EXPIRES_IN: 1d
+
+      - name: Vérifier le build
+        run: npm run build
