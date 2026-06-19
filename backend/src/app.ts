@@ -41,10 +41,12 @@ app.use("/api/membres", membreRoutes);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Démarrage du serveur
-connectMongo().then(() => {
-app.listen(Number(PORT), "0.0.0.0", () => {
-  console.log(`Serveur ARTM démarré sur le port ${PORT}`);
-});
-});
+if (process.env.NODE_ENV !== "test") {
+  connectMongo().then(() => {
+    app.listen(Number(PORT), "0.0.0.0", () => {
+      console.log(`Serveur ARTM démarré sur le port ${PORT}`);
+    });
+  });
+}
 
 export default app;
