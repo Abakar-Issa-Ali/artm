@@ -2,7 +2,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import ValidationScreen from "../screens/tresorier/ValidationScreen";
 import MembresScreen from "../screens/tresorier/MembresScreen";
-import PublierAnnonceScreen from "../screens/tresorier/GestionAnnoncesScreen";
+import GestionAnnoncesScreen from "../screens/tresorier/GestionAnnoncesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
 
 const Tab = createBottomTabNavigator();
@@ -30,7 +30,7 @@ export default function TresorierTabNavigator() {
       />
       <Tab.Screen
         name="Annoncer"
-        component={PublierAnnonceScreen}
+        component={GestionAnnoncesScreen}
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="create-outline" size={size} color={color} /> }}
       />
       <Tab.Screen

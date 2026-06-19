@@ -4,16 +4,18 @@ import {
   KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
+import Toast from "../components/Toast";
 
 export default function LoginScreen({ onInscription }: { onInscription: () => void }) {
   const { connexion } = useAuth();
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
+  const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
   const [chargement, setChargement] = useState(false);
 
   async function gererConnexion() {
     if (!email || !motDePasse) {
-      Alert.alert("Champs requis", "Merci de renseigner votre email et mot de passe.");
+      setToast({ message: "Merci de renseigner votre email et mot de passe.", type: "erreur" });
       return;
     }
     setChargement(true);
@@ -21,7 +23,7 @@ export default function LoginScreen({ onInscription }: { onInscription: () => vo
       await connexion(email.trim().toLowerCase(), motDePasse);
     } catch (error: any) {
       const message = error.response?.data?.error || "Connexion impossible";
-      Alert.alert("Erreur", message);
+      setToast({ message, type: "erreur" });
     } finally {
       setChargement(false);
     }
@@ -76,6 +78,7 @@ export default function LoginScreen({ onInscription }: { onInscription: () => vo
           <Text style={styles.lienTexte}>Pas encore de compte ? Créer un compte</Text>
         </TouchableOpacity>
       </View>
+      {/* <Toast message={toast?.message || null} type={toast?.type} onHide={() => setToast(null)} /> */}
     </KeyboardAvoidingView>
   );
 }

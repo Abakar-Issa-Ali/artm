@@ -2,6 +2,8 @@ import { useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { getPaiementsEnAttente, validerPaiement, rejeterPaiement } from "../../services/tresorier.service";
+import Confirm from "../../components/Confirm";
+import Toast from "../../components/Toast";
 
 const MOIS = ["", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
@@ -10,6 +12,8 @@ export default function ValidationScreen() {
   const [chargement, setChargement] = useState(true);
   const [refresh, setRefresh] = useState(false);
   const [traitement, setTraitement] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
+  const [confirmation, setConfirmation] = useState<any>(null);
 
   const charger = useCallback(async () => {
     try {
@@ -35,18 +39,20 @@ export default function ValidationScreen() {
       }
       await charger();
     } catch (error: any) {
-      Alert.alert("Erreur", error.response?.data?.error || "Action impossible");
+      setToast({ message: error.response?.data?.error || "Action impossible", type: "erreur" });
     } finally {
       setTraitement(null);
     }
   }
-
-  function confirmer(id: number, action: "valider" | "rejeter", nom: string) {
+function confirmer(id: number, action: "valider" | "rejeter", nom: string) {
     const verbe = action === "valider" ? "Valider" : "Rejeter";
-    Alert.alert(`${verbe} le paiement`, `${verbe} le paiement de ${nom} ?`, [
-      { text: "Annuler", style: "cancel" },
-      { text: verbe, onPress: () => traiter(id, action), style: action === "rejeter" ? "destructive" : "default" },
-    ]);
+    setConfirmation({
+      id, action, nom,
+      titre: `${verbe} le paiement`,
+      message: `${verbe} le paiement de ${nom} ?`,
+      texteConfirmer: verbe,
+      destructif: action === "rejeter",
+    });
   }
 
   if (chargement) {
@@ -54,6 +60,8 @@ export default function ValidationScreen() {
   }
 
   return (
+
+    
     <View style={styles.page}>
       <View style={styles.header}>
         <Text style={styles.headerTitre}>Paiements à valider</Text>
@@ -92,6 +100,25 @@ export default function ValidationScreen() {
                     </TouchableOpacity>
                   </View>
                 )}
+                <Confirm
+                    visible={!!confirmation}
+                    titre={confirmation?.titre || ""}
+                    message={confirmation?.message}
+                    texteConfirmer={confirmation?.texteConfirmer}
+                    destructif={confirmation?.destructif}
+                    onConfirmer={() => {
+                      const c = confirmation;
+                      setConfirmation(null);
+                      if (c) traiter(c.id, c.action);
+                    }}
+                    onAnnuler={() => setConfirmation(null)}
+                  />
+
+                  <Toast
+                    message={toast?.message || null}
+                    type={toast?.type}
+                    onHide={() => setToast(null)}
+                  />
               </View>
             );
           })

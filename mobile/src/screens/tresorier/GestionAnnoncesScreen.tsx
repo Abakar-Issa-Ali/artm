@@ -4,6 +4,8 @@ import {
   ActivityIndicator, Alert, RefreshControl, KeyboardAvoidingView, Platform,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import Confirm from "../../components/Confirm";
+import Toast from "../../components/Toast";
 import { getAnnonces } from "../../services/communication.service";
 import { publierAnnonce, modifierAnnonce, supprimerAnnonce } from "../../services/tresorier.service";
 
@@ -11,6 +13,8 @@ export default function GestionAnnoncesScreen() {
   const [annonces, setAnnonces] = useState<any[]>([]);
   const [chargement, setChargement] = useState(true);
   const [refresh, setRefresh] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
+  const [aSupprimer, setASupprimer] = useState<any>(null);
 
   // Formulaire : si editId est défini, on est en mode édition
   const [editId, setEditId] = useState<string | null>(null);
@@ -46,7 +50,7 @@ export default function GestionAnnoncesScreen() {
 
   async function enregistrer() {
     if (!titre.trim() || !contenu.trim()) {
-      Alert.alert("Champs requis", "Merci de remplir le titre et le contenu.");
+      setToast({ message: "Merci de remplir le titre et le contenu.", type: "erreur" });
       return;
     }
     setEnvoi(true);
@@ -59,29 +63,29 @@ export default function GestionAnnoncesScreen() {
       reinitialiser();
       await charger();
     } catch (error: any) {
-      Alert.alert("Erreur", error.response?.data?.error || "Action impossible");
+      setToast({ message: error.response?.data?.error || "Action impossible", type: "erreur" });
     } finally {
       setEnvoi(false);
     }
   }
 
   function confirmerSuppression(annonce: any) {
-    Alert.alert("Supprimer", `Supprimer l'annonce "${annonce.titre}" ?`, [
-      { text: "Annuler", style: "cancel" },
-      {
-        text: "Supprimer", style: "destructive",
-        onPress: async () => {
-          try {
-            await supprimerAnnonce(annonce._id);
-            if (editId === annonce._id) reinitialiser();
-            await charger();
-          } catch (error: any) {
-            Alert.alert("Erreur", error.response?.data?.error || "Suppression impossible");
-          }
-        },
-      },
-    ]);
-  }
+      setASupprimer(annonce);
+    }
+
+    async function executerSuppression() {
+      const annonce = aSupprimer;
+      setASupprimer(null);
+      if (!annonce) return;
+      try {
+        await supprimerAnnonce(annonce._id);
+        if (editId === annonce._id) reinitialiser();
+        await charger();
+        setToast({ message: "Annonce supprimée", type: "succes" });
+      } catch (error: any) {
+        setToast({ message: error.response?.data?.error || "Suppression impossible", type: "erreur" });
+      }
+    }
 
   if (chargement) {
     return <View style={styles.loader}><ActivityIndicator size="large" color="#15326B" /></View>;
@@ -143,6 +147,21 @@ export default function GestionAnnoncesScreen() {
           ))
         )}
       </ScrollView>
+        <Confirm
+        visible={!!aSupprimer}
+        titre="Supprimer l'annonce"
+        message={aSupprimer ? `Supprimer « ${aSupprimer.titre} » ?` : ""}
+        texteConfirmer="Supprimer"
+        destructif
+        onConfirmer={executerSuppression}
+        onAnnuler={() => setASupprimer(null)}
+      />
+
+      <Toast
+        message={toast?.message || null}
+        type={toast?.type}
+        onHide={() => setToast(null)}
+      />
     </KeyboardAvoidingView>
   );
 }

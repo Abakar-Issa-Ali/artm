@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from "react-native";
 import { updateProfil } from "../services/membre.service";
+import Toast from "../components/Toast";
 
 export default function ModifierProfilScreen({
   profil, onTermine, onAnnuler,
@@ -16,20 +17,20 @@ export default function ModifierProfilScreen({
   const [prenom, setPrenom] = useState(profil?.prenom || "");
   const [telephone, setTelephone] = useState(profil?.telephone || "");
   const [envoi, setEnvoi] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
 
   async function enregistrer() {
-    if (!nom.trim() || !prenom.trim()) {
-      Alert.alert("Champs requis", "Le nom et le prénom sont obligatoires.");
+if (!nom.trim() || !prenom.trim()) {
+      setToast({ message: "Le nom et le prénom sont obligatoires.", type: "erreur" });
       return;
     }
     setEnvoi(true);
     try {
       await updateProfil({ nom: nom.trim(), prenom: prenom.trim(), telephone: telephone.trim() });
-      Alert.alert("Profil mis à jour", "Vos informations ont été enregistrées.", [
-        { text: "OK", onPress: onTermine },
-      ]);
+      setToast({ message: "Profil mis à jour", type: "succes" });
+      setTimeout(onTermine, 800);
     } catch (error: any) {
-      Alert.alert("Erreur", error.response?.data?.error || "Mise à jour impossible");
+      setToast({ message: error.response?.data?.error || "Mise à jour impossible", type: "erreur" });
     } finally {
       setEnvoi(false);
     }
@@ -58,6 +59,7 @@ export default function ModifierProfilScreen({
           <Text style={styles.annulerTexte}>Annuler</Text>
         </TouchableOpacity>
       </View>
+      <Toast message={toast?.message || null} type={toast?.type} onHide={() => setToast(null)} />
     </KeyboardAvoidingView>
   );
 }

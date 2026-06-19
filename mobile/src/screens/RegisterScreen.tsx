@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView, Platform, Alert, ActivityIndicator, ScrollView,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
+import Toast from "../components/Toast";
 
 export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
   const { inscription } = useAuth();
@@ -13,14 +14,15 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
   const [telephone, setTelephone] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [chargement, setChargement] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
 
   async function gererInscription() {
     if (!nom || !prenom || !email || !motDePasse) {
-      Alert.alert("Champs requis", "Merci de remplir nom, prénom, email et mot de passe.");
+      setToast({ message: "Merci de remplir nom, prénom, email et mot de passe.", type: "erreur" });
       return;
     }
     if (motDePasse.length < 6) {
-      Alert.alert("Mot de passe trop court", "Le mot de passe doit faire au moins 6 caractères.");
+      setToast({ message: "Le mot de passe doit faire au moins 6 caractères.", type: "erreur" });
       return;
     }
     setChargement(true);
@@ -34,7 +36,7 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
       });
     } catch (error: any) {
       const message = error.response?.data?.error || "Inscription impossible";
-      Alert.alert("Erreur", message);
+      setToast({ message, type: "erreur" });
     } finally {
       setChargement(false);
     }
@@ -71,6 +73,7 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <Toast message={toast?.message || null} type={toast?.type} onHide={() => setToast(null)} />
     </KeyboardAvoidingView>
   );
 }

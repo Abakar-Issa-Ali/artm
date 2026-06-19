@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity, Modal, Alert, Pressable } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import Confirm from "../../components/Confirm";
+import Toast from "../../components/Toast";
 import { getMembres, getResume, changerRole, desactiverMembre, reactiverMembre, supprimerMembre, relancerMembre } from "../../services/tresorier.service";
 
 export default function MembresScreen() {
@@ -8,7 +10,8 @@ export default function MembresScreen() {
   const [chargement, setChargement] = useState(true);
   const [refresh, setRefresh] = useState(false);
   const [resume, setResume] = useState<any>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [aSupprimer, setASupprimer] = useState<any>(null);
+  const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
 
   // Membre sélectionné pour le menu d'actions
   const [selection, setSelection] = useState<any>(null);
@@ -41,29 +44,35 @@ export default function MembresScreen() {
       fermer();
       await charger();
     } catch (error: any) {
-      Alert.alert("Erreur", error.response?.data?.error || "Action impossible");
+     setToast({ message: error.response?.data?.error || "Action impossible", type: "erreur" });
     }
   }
-async function relancer(m: any) {
+  
+  async function relancer(m: any) {
     try {
       await relancerMembre(m.id);
-      setToast(`Relance envoyée à ${m.prenom}`);
-      setTimeout(() => setToast(null), 2500);
+      setToast({ message: `Relance envoyée à ${m.prenom}`, type: "succes" });
     } catch (error: any) {
-      Alert.alert("Erreur", error.response?.data?.error || "Relance impossible");
+      setToast({ message: error.response?.data?.error || "Relance impossible", type: "erreur" });
     }
   }
 
   function confirmerSuppression(m: any) {
-    Alert.alert(
-      "Suppression définitive",
-      `Supprimer ${m.prenom} ${m.nom} et toutes ses données ? Cette action est irréversible.`,
-      [
-        { text: "Annuler", style: "cancel" },
-        { text: "Supprimer", style: "destructive", onPress: () => action(() => supprimerMembre(m.id)) },
-      ]
-    );
-  }
+      setASupprimer(m);
+    }
+
+    async function executerSuppression() {
+      const m = aSupprimer;
+      setASupprimer(null);
+      if (!m) return;
+      try {
+        await supprimerMembre(m.id);
+        await charger();
+        setToast({ message: `${m.prenom} ${m.nom} supprimé`, type: "succes" });
+      } catch (error: any) {
+        setToast({ message: error.response?.data?.error || "Suppression impossible", type: "erreur" });
+      }
+    }
 
   if (chargement) {
     return <View style={styles.loader}><ActivityIndicator size="large" color="#15326B" /></View>;
@@ -185,11 +194,22 @@ async function relancer(m: any) {
           </Pressable>
         </Pressable>
       </Modal>
-      {toast && (
-        <View style={styles.toast}>
-          <Text style={styles.toastTexte}>{toast}</Text>
-        </View>
-      )}
+      {/* Modal de confirmation de suppression */}
+      <Confirm
+        visible={!!aSupprimer}
+        titre="Suppression définitive"
+        message={aSupprimer ? `Supprimer ${aSupprimer.prenom} ${aSupprimer.nom} et toutes ses données ? Cette action est irréversible.` : ""}
+        texteConfirmer="Supprimer"
+        destructif
+        onConfirmer={executerSuppression}
+        onAnnuler={() => setASupprimer(null)}
+      />
+
+      <Toast
+        message={toast?.message || null}
+        type={toast?.type}
+        onHide={() => setToast(null)}
+      />
     </View>
   );
 }

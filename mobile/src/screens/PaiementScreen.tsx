@@ -5,6 +5,7 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { getMesCotisations } from "../services/cotisation.service";
 import { declarerPaiement } from "../services/paiement.service";
+import Toast from "../components/Toast";
 
 const MOIS = ["", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 const MODES = [
@@ -20,6 +21,7 @@ export default function PaiementScreen() {
   const [selection, setSelection] = useState<any>(null);
   const [mode, setMode] = useState("virement");
   const [envoi, setEnvoi] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
 
   const charger = useCallback(async () => {
     try {
@@ -44,14 +46,12 @@ export default function PaiementScreen() {
     setEnvoi(true);
     try {
       await declarerPaiement(selection.id, mode);
-      Alert.alert(
-        "Paiement déclaré",
-        "Votre paiement est en attente de validation par le trésorier.",
-        [{ text: "OK", onPress: () => { setSelection(null); charger(); } }]
-      );
+      setToast({ message: "Paiement déclaré, en attente de validation.", type: "succes" });
+      setSelection(null);
+      charger();
     } catch (error: any) {
       const message = error.response?.data?.error || "Erreur lors de la déclaration";
-      Alert.alert("Erreur", message);
+      setToast({ message, type: "erreur" });
     } finally {
       setEnvoi(false);
     }
@@ -126,6 +126,11 @@ export default function PaiementScreen() {
           </>
         )}
       </ScrollView>
+      <Toast
+        message={toast?.message || null}
+        type={toast?.type}
+        onHide={() => setToast(null)}
+      />
     </View>
   );
 }
