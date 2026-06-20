@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  View, Text, TextInput, TouchableOpacity, StyleSheet, Image,
   KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
@@ -34,6 +34,11 @@ export default function LoginScreen({ onInscription }: { onInscription: () => vo
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      <Image
+        source={require("../../assets/logo-artm.png")}
+        style={styles.logoImage}
+        resizeMode="contain"
+      />
       <View style={styles.logo}>
         <Text style={styles.logoTexte}>ARTM</Text>
       </View>
@@ -78,7 +83,7 @@ export default function LoginScreen({ onInscription }: { onInscription: () => vo
           <Text style={styles.lienTexte}>Pas encore de compte ? Créer un compte</Text>
         </TouchableOpacity>
       </View>
-      {/* <Toast message={toast?.message || null} type={toast?.type} onHide={() => setToast(null)} /> */}
+      <Toast message={toast?.message || null} type={toast?.type} onHide={() => setToast(null)} />
     </KeyboardAvoidingView>
   );
 }
@@ -87,7 +92,8 @@ const styles = StyleSheet.create({
   lien: { marginTop: 16, alignItems: "center" },
   lienTexte: { color: "#15326B", fontSize: 13.5 },
   container: { flex: 1, backgroundColor: "#15326B", justifyContent: "center", padding: 24 },
-  logo: { alignItems: "center", marginBottom: 8 },
+  logoImage: { width: 400, height: 200, alignSelf: "center", marginBottom: -45 },
+  logo: { alignItems: "center", marginBottom: 2 },
   logoTexte: { color: "#E8A33D", fontSize: 44, fontWeight: "500", letterSpacing: 2 },
   sousTitre: { color: "#FBF8F2", textAlign: "center", fontSize: 13, opacity: 0.8, marginBottom: 36, lineHeight: 19 },
   carte: { backgroundColor: "#FBF8F2", borderRadius: 20, padding: 22 },
