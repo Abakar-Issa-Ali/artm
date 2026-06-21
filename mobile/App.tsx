@@ -9,10 +9,12 @@ import TabNavigator from "./src/navigation/TabNavigator";
 import TresorierContainer from "./src/navigation/TresorierContainer";
 import { useState } from "react";
 import RegisterScreen from "./src/screens/RegisterScreen";
+import MotDePasseOublieScreen from "./src/screens/MotDePasseOublieScreen";
 
 function Routes() {
   const { membre, chargement } = useAuth();
   const [afficheInscription, setAfficheInscription] = useState(false);
+  const [afficheMotDePasseOublie, setAfficheMotDePasseOublie] = useState(false);
 
   if (chargement) {
     return (
@@ -21,11 +23,19 @@ function Routes() {
       </View>
     );
   }
-
-  if (!membre) {
-    return afficheInscription
-      ? <RegisterScreen onRetour={() => setAfficheInscription(false)} />
-      : <LoginScreen onInscription={() => setAfficheInscription(true)} />;
+if (!membre) {
+    if (afficheInscription) {
+      return <RegisterScreen onRetour={() => setAfficheInscription(false)} />;
+    }
+    if (afficheMotDePasseOublie) {
+      return <MotDePasseOublieScreen onRetour={() => setAfficheMotDePasseOublie(false)} />;
+    }
+    return (
+      <LoginScreen
+        onInscription={() => setAfficheInscription(true)}
+        onMotDePasseOublie={() => setAfficheMotDePasseOublie(true)}
+      />
+    );
   }
 
  return membre.role === "tresorier" ? <TresorierContainer /> : <TabNavigator />;

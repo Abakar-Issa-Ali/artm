@@ -26,6 +26,8 @@ model Membre {
   motDePasse   String       @map("mot_de_passe") @db.VarChar(255)
   actif        Boolean      @default(true)
   dateAdhesion DateTime     @default(now()) @map("date_adhesion") @db.Date
+codeReset        String?    @map("code_reset") @db.VarChar(6)
+  codeResetExpire  DateTime?  @map("code_reset_expire")
 
   role         Role         @relation(fields: [roleId], references: [id])
   cotisations  Cotisation[]

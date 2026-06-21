@@ -1,6 +1,7 @@
 import { Router } from "express";
 import * as authController from "../controllers/auth.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
+import { motDePasseOublie, reinitialiser } from "../controllers/auth.controller.js";
 
 const router = Router();
 
@@ -57,6 +58,72 @@ router.post("/register", authController.register);
  *       401: { description: Email ou mot de passe incorrect }
  */
 router.post("/login", authController.login);
+/**
+ * @swagger
+ * /api/auth/mot-de-passe-oublie:
+ *   post:
+ *     summary: Demande de réinitialisation du mot de passe
+ *     description: Génère un code à 6 chiffres et l'envoie par email. Pour des raisons de sécurité, la réponse est identique que l'email existe ou non.
+ *     tags: [Authentification]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: membre@artm.fr
+ *     responses:
+ *       200:
+ *         description: Si un compte existe, un code a été envoyé par email.
+ *       400:
+ *         description: Email manquant.
+ *       500:
+ *         description: Erreur lors de l'envoi du code.
+ */
+router.post("/mot-de-passe-oublie", motDePasseOublie);
+
+/**
+ * @swagger
+ * /api/auth/reinitialiser:
+ *   post:
+ *     summary: Réinitialisation du mot de passe avec le code reçu
+ *     description: Vérifie le code à 6 chiffres reçu par email et définit un nouveau mot de passe. Le code expire après 15 minutes.
+ *     tags: [Authentification]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - code
+ *               - nouveauMotDePasse
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: membre@artm.fr
+ *               code:
+ *                 type: string
+ *                 example: "123456"
+ *               nouveauMotDePasse:
+ *                 type: string
+ *                 format: password
+ *                 example: MonNouveauMotDePasse123
+ *     responses:
+ *       200:
+ *         description: Mot de passe réinitialisé avec succès.
+ *       400:
+ *         description: Code incorrect, expiré, ou champs manquants.
+ */
+router.post("/reinitialiser", reinitialiser);
 
 /**
  * @swagger

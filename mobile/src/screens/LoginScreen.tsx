@@ -6,7 +6,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import Toast from "../components/Toast";
 
-export default function LoginScreen({ onInscription }: { onInscription: () => void }) {
+export default function LoginScreen({ onInscription, onMotDePasseOublie }: { onInscription: () => void; onMotDePasseOublie: () => void }) {
   const { connexion } = useAuth();
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
@@ -78,7 +78,10 @@ export default function LoginScreen({ onInscription }: { onInscription: () => vo
           ) : (
             <Text style={styles.boutonTexte}>Se connecter</Text>
           )}
-        </TouchableOpacity>
+          <TouchableOpacity onPress={onMotDePasseOublie} style={styles.lien}>
+          <Text style={styles.lienTexte}>Mot de passe oublié ?</Text>
+          </TouchableOpacity>
+          </TouchableOpacity>
           <TouchableOpacity onPress={onInscription} style={styles.lien}>
           <Text style={styles.lienTexte}>Pas encore de compte ? Créer un compte</Text>
         </TouchableOpacity>
