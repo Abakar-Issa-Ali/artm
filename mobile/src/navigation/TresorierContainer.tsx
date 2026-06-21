@@ -28,15 +28,15 @@ export default function TresorierContainer() {
 }
 
 const styles = StyleSheet.create({
-  bouton: {
+bouton: {
     position: "absolute",
     top: 58,
     right: 16,
-    backgroundColor: "#E8A33D",
+    backgroundColor: "#F59E0B",
     paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingVertical: 8,
     borderRadius: 20,
     zIndex: 100,
   },
-  boutonTexte: { color: "#15326B", fontWeight: "500", fontSize: 13 },
+  boutonTexte: { color: "#FFFFFF", fontFamily: "Poppins_600SemiBold", fontSize: 12.5 },
 });

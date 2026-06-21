@@ -1,10 +1,12 @@
 import { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
+  KeyboardAvoidingView, Platform, ActivityIndicator,
 } from "react-native";
 import { updateProfil } from "../services/membre.service";
 import Toast from "../components/Toast";
+import { colors, radius, shadow, fonts } from "../theme/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ModifierProfilScreen({
   profil, onTermine, onAnnuler,
@@ -20,7 +22,7 @@ export default function ModifierProfilScreen({
   const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
 
   async function enregistrer() {
-if (!nom.trim() || !prenom.trim()) {
+    if (!nom.trim() || !prenom.trim()) {
       setToast({ message: "Le nom et le prénom sont obligatoires.", type: "erreur" });
       return;
     }
@@ -39,20 +41,26 @@ if (!nom.trim() || !prenom.trim()) {
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={onAnnuler} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={styles.retour}>
+          <Ionicons name="arrow-back" size={22} color={colors.blanc} />
+        </TouchableOpacity>
         <Text style={styles.headerTitre}>Modifier mon profil</Text>
       </View>
+
       <View style={styles.contenu}>
-        <Text style={styles.label}>Prénom</Text>
-        <TextInput style={styles.input} value={prenom} onChangeText={setPrenom} placeholderTextColor="#aaa399" />
+        <View style={styles.carte}>
+          <Text style={styles.label}>Prénom</Text>
+          <TextInput style={styles.input} value={prenom} onChangeText={setPrenom} placeholderTextColor={colors.grisClair} />
 
-        <Text style={styles.label}>Nom</Text>
-        <TextInput style={styles.input} value={nom} onChangeText={setNom} placeholderTextColor="#aaa399" />
+          <Text style={styles.label}>Nom</Text>
+          <TextInput style={styles.input} value={nom} onChangeText={setNom} placeholderTextColor={colors.grisClair} />
 
-        <Text style={styles.label}>Téléphone</Text>
-        <TextInput style={styles.input} value={telephone} onChangeText={setTelephone} placeholder="06..." placeholderTextColor="#aaa399" keyboardType="phone-pad" />
+          <Text style={styles.label}>Téléphone</Text>
+          <TextInput style={styles.input} value={telephone} onChangeText={setTelephone} placeholder="06..." placeholderTextColor={colors.grisClair} keyboardType="phone-pad" />
+        </View>
 
-        <TouchableOpacity style={styles.bouton} onPress={enregistrer} disabled={envoi}>
-          {envoi ? <ActivityIndicator color="#15326B" /> : <Text style={styles.boutonTexte}>Enregistrer</Text>}
+        <TouchableOpacity style={styles.bouton} onPress={enregistrer} disabled={envoi} activeOpacity={0.85}>
+          {envoi ? <ActivityIndicator color={colors.blanc} /> : <Text style={styles.boutonTexte}>Enregistrer</Text>}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={onAnnuler} style={styles.annuler}>
@@ -65,14 +73,20 @@ if (!nom.trim() || !prenom.trim()) {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#FBF8F2" },
-  header: { backgroundColor: "#15326B", paddingTop: 60, paddingHorizontal: 20, paddingBottom: 18 },
-  headerTitre: { color: "#FBF8F2", fontSize: 18, fontWeight: "500" },
+  page: { flex: 1, backgroundColor: colors.fond },
+  header: { backgroundColor: colors.bleu, paddingTop: 60, paddingHorizontal: 20, paddingBottom: 22, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, flexDirection: "row", alignItems: "center" },
+  retour: { marginRight: 14 },
+  headerTitre: { color: colors.blanc, fontSize: 19, fontFamily: fonts.semibold },
   contenu: { padding: 20 },
-  label: { color: "#15326B", fontSize: 13, fontWeight: "500", marginBottom: 6, marginTop: 14 },
-  input: { backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#d8d2c4", borderRadius: 11, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: "#2a2a28" },
-  bouton: { backgroundColor: "#E8A33D", borderRadius: 12, paddingVertical: 15, alignItems: "center", marginTop: 28 },
-  boutonTexte: { color: "#15326B", fontWeight: "500", fontSize: 16 },
+  carte: { backgroundColor: colors.blanc, borderRadius: radius.lg, padding: 20, ...shadow.carte },
+  label: { color: colors.texte, fontSize: 13, fontFamily: fonts.semibold, marginBottom: 6, marginTop: 14 },
+  input: {
+    backgroundColor: colors.fond, borderWidth: 1, borderColor: colors.bordure,
+    borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15,
+    color: colors.texte, fontFamily: fonts.regular,
+  },
+  bouton: { backgroundColor: colors.or, borderRadius: radius.md, paddingVertical: 16, alignItems: "center", marginTop: 24 },
+  boutonTexte: { color: colors.blanc, fontFamily: fonts.semibold, fontSize: 16 },
   annuler: { marginTop: 14, alignItems: "center", paddingVertical: 10 },
-  annulerTexte: { color: "#8a857c", fontSize: 14 },
+  annulerTexte: { color: colors.gris, fontSize: 14, fontFamily: fonts.medium },
 });

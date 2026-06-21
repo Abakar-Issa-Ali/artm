@@ -3,15 +3,17 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import Toast from "../components/Toast";
 import { demanderResetMotDePasse, reinitialiserMotDePasse } from "../services/auth.service";
+import { colors, radius, shadow, fonts } from "../theme/theme";
 
 export default function MotDePasseOublieScreen({ onRetour }: { onRetour: () => void }) {
-  // etape 1 = saisie email, etape 2 = saisie code + nouveau mot de passe
   const [etape, setEtape] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [nouveauMotDePasse, setNouveauMotDePasse] = useState("");
+  const [voirMdp, setVoirMdp] = useState(false);
   const [chargement, setChargement] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
 
@@ -55,7 +57,7 @@ export default function MotDePasseOublieScreen({ onRetour }: { onRetour: () => v
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Text style={styles.titre}>Mot de passe oublié</Text>
         <Text style={styles.sousTitre}>
           {etape === 1
@@ -70,14 +72,14 @@ export default function MotDePasseOublieScreen({ onRetour }: { onRetour: () => v
               <TextInput
                 style={styles.input}
                 placeholder="votre@email.fr"
-                placeholderTextColor="#aaa399"
+                placeholderTextColor={colors.grisClair}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
               />
-              <TouchableOpacity style={styles.bouton} onPress={demanderCode} disabled={chargement}>
-                {chargement ? <ActivityIndicator color="#15326B" /> : <Text style={styles.boutonTexte}>Recevoir le code</Text>}
+              <TouchableOpacity style={styles.bouton} onPress={demanderCode} disabled={chargement} activeOpacity={0.85}>
+                {chargement ? <ActivityIndicator color={colors.blanc} /> : <Text style={styles.boutonTexte}>Recevoir le code</Text>}
               </TouchableOpacity>
             </>
           ) : (
@@ -86,7 +88,7 @@ export default function MotDePasseOublieScreen({ onRetour }: { onRetour: () => v
               <TextInput
                 style={styles.input}
                 placeholder="123456"
-                placeholderTextColor="#aaa399"
+                placeholderTextColor={colors.grisClair}
                 value={code}
                 onChangeText={setCode}
                 keyboardType="number-pad"
@@ -94,27 +96,34 @@ export default function MotDePasseOublieScreen({ onRetour }: { onRetour: () => v
               />
 
               <Text style={styles.label}>Nouveau mot de passe</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#aaa399"
-                value={nouveauMotDePasse}
-                onChangeText={setNouveauMotDePasse}
-                secureTextEntry
-              />
+              <View style={styles.inputMdp}>
+                <TextInput
+                  style={styles.inputMdpChamp}
+                  placeholder="••••••••"
+                  placeholderTextColor={colors.grisClair}
+                  value={nouveauMotDePasse}
+                  onChangeText={setNouveauMotDePasse}
+                  secureTextEntry={!voirMdp}
+                />
+                <TouchableOpacity onPress={() => setVoirMdp(!voirMdp)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name={voirMdp ? "eye-off-outline" : "eye-outline"} size={20} color={colors.gris} />
+                </TouchableOpacity>
+              </View>
 
-              <TouchableOpacity style={styles.bouton} onPress={reinitialiser} disabled={chargement}>
-                {chargement ? <ActivityIndicator color="#15326B" /> : <Text style={styles.boutonTexte}>Réinitialiser</Text>}
+              <TouchableOpacity style={styles.bouton} onPress={reinitialiser} disabled={chargement} activeOpacity={0.85}>
+                {chargement ? <ActivityIndicator color={colors.blanc} /> : <Text style={styles.boutonTexte}>Réinitialiser</Text>}
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => setEtape(1)} style={styles.lienSecondaire}>
-                <Text style={styles.lienTexte}>Je n'ai pas reçu le code — réessayer</Text>
+                <Text style={styles.lienGris}>Je n'ai pas reçu le code — réessayer</Text>
               </TouchableOpacity>
             </>
           )}
 
-          <TouchableOpacity onPress={onRetour} style={styles.lien}>
-            <Text style={styles.lienTexte}>Retour à la connexion</Text>
+          <View style={styles.separateur} />
+
+          <TouchableOpacity onPress={onRetour} style={styles.lienCentre}>
+            <Text style={styles.lienOr}>Retour à la connexion</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -124,16 +133,27 @@ export default function MotDePasseOublieScreen({ onRetour }: { onRetour: () => v
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#15326B" },
+  container: { flex: 1, backgroundColor: colors.bleu },
   scroll: { padding: 24, paddingTop: 90, paddingBottom: 40, flexGrow: 1, justifyContent: "center" },
-  titre: { color: "#E8A33D", fontSize: 28, fontWeight: "500", textAlign: "center" },
-  sousTitre: { color: "#FBF8F2", textAlign: "center", fontSize: 13, opacity: 0.8, marginTop: 6, marginBottom: 28, lineHeight: 19 },
-  carte: { backgroundColor: "#FBF8F2", borderRadius: 20, padding: 22 },
-  label: { color: "#15326B", fontSize: 13, fontWeight: "500", marginBottom: 6, marginTop: 12 },
-  input: { backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#d8d2c4", borderRadius: 11, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: "#2a2a28" },
-  bouton: { backgroundColor: "#E8A33D", borderRadius: 12, paddingVertical: 15, alignItems: "center", marginTop: 24 },
-  boutonTexte: { color: "#15326B", fontWeight: "500", fontSize: 16 },
-  lien: { marginTop: 16, alignItems: "center" },
+  titre: { color: colors.blanc, fontSize: 28, fontFamily: fonts.bold, textAlign: "center" },
+  sousTitre: { color: colors.blanc, textAlign: "center", fontSize: 14, opacity: 0.85, marginTop: 6, marginBottom: 28, lineHeight: 20, fontFamily: fonts.regular },
+  carte: { backgroundColor: colors.blanc, borderRadius: radius.xl, padding: 24, ...shadow.carte },
+  label: { color: colors.texte, fontSize: 13, fontFamily: fonts.semibold, marginBottom: 6, marginTop: 14 },
+  input: {
+    backgroundColor: colors.fond, borderWidth: 1, borderColor: colors.bordure,
+    borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15,
+    color: colors.texte, fontFamily: fonts.regular,
+  },
+  inputMdp: {
+    flexDirection: "row", alignItems: "center", backgroundColor: colors.fond,
+    borderWidth: 1, borderColor: colors.bordure, borderRadius: radius.md, paddingHorizontal: 14,
+  },
+  inputMdpChamp: { flex: 1, paddingVertical: 13, fontSize: 15, color: colors.texte, fontFamily: fonts.regular },
+  bouton: { backgroundColor: colors.or, borderRadius: radius.md, paddingVertical: 16, alignItems: "center", marginTop: 24 },
+  boutonTexte: { color: colors.blanc, fontFamily: fonts.semibold, fontSize: 16 },
+  separateur: { height: 1, backgroundColor: colors.bordure, marginTop: 20 },
+  lienCentre: { marginTop: 16, alignItems: "center" },
   lienSecondaire: { marginTop: 14, alignItems: "center" },
-  lienTexte: { color: "#15326B", fontSize: 13.5 },
+  lienOr: { color: colors.or, fontSize: 13.5, fontFamily: fonts.semibold },
+  lienGris: { color: colors.gris, fontSize: 13.5, fontFamily: fonts.regular },
 });

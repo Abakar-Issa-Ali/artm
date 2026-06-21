@@ -1,10 +1,12 @@
 import { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, Alert, ActivityIndicator, ScrollView,
+  KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import Toast from "../components/Toast";
+import { colors, radius, shadow, fonts } from "../theme/theme";
 
 export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
   const { inscription } = useAuth();
@@ -13,6 +15,7 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
+  const [voirMdp, setVoirMdp] = useState(false);
   const [chargement, setChargement] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
 
@@ -44,32 +47,48 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Text style={styles.titre}>Créer un compte</Text>
         <Text style={styles.sousTitre}>Rejoignez l'ARTM</Text>
 
         <View style={styles.carte}>
           <Text style={styles.label}>Prénom</Text>
-          <TextInput style={styles.input} value={prenom} onChangeText={setPrenom} placeholder="Votre prénom" placeholderTextColor="#aaa399" />
+          <TextInput style={styles.input} value={prenom} onChangeText={setPrenom} placeholder="Votre prénom" placeholderTextColor={colors.grisClair} />
 
           <Text style={styles.label}>Nom</Text>
-          <TextInput style={styles.input} value={nom} onChangeText={setNom} placeholder="Votre nom" placeholderTextColor="#aaa399" />
+          <TextInput style={styles.input} value={nom} onChangeText={setNom} placeholder="Votre nom" placeholderTextColor={colors.grisClair} />
 
           <Text style={styles.label}>Email</Text>
-          <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="votre@email.fr" placeholderTextColor="#aaa399" autoCapitalize="none" keyboardType="email-address" />
+          <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="votre@email.fr" placeholderTextColor={colors.grisClair} autoCapitalize="none" keyboardType="email-address" />
 
           <Text style={styles.label}>Téléphone (optionnel)</Text>
-          <TextInput style={styles.input} value={telephone} onChangeText={setTelephone} placeholder="06..." placeholderTextColor="#aaa399" keyboardType="phone-pad" />
+          <TextInput style={styles.input} value={telephone} onChangeText={setTelephone} placeholder="06..." placeholderTextColor={colors.grisClair} keyboardType="phone-pad" />
 
           <Text style={styles.label}>Mot de passe</Text>
-          <TextInput style={styles.input} value={motDePasse} onChangeText={setMotDePasse} placeholder="••••••••" placeholderTextColor="#aaa399" secureTextEntry />
+          <View style={styles.inputMdp}>
+            <TextInput
+              style={styles.inputMdpChamp}
+              value={motDePasse}
+              onChangeText={setMotDePasse}
+              placeholder="••••••••"
+              placeholderTextColor={colors.grisClair}
+              secureTextEntry={!voirMdp}
+            />
+            <TouchableOpacity onPress={() => setVoirMdp(!voirMdp)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name={voirMdp ? "eye-off-outline" : "eye-outline"} size={20} color={colors.gris} />
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity style={styles.bouton} onPress={gererInscription} disabled={chargement}>
-            {chargement ? <ActivityIndicator color="#15326B" /> : <Text style={styles.boutonTexte}>Créer mon compte</Text>}
+          <TouchableOpacity style={styles.bouton} onPress={gererInscription} disabled={chargement} activeOpacity={0.85}>
+            {chargement ? <ActivityIndicator color={colors.blanc} /> : <Text style={styles.boutonTexte}>Créer mon compte</Text>}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={onRetour} style={styles.lien}>
-            <Text style={styles.lienTexte}>J'ai déjà un compte — Se connecter</Text>
+          <View style={styles.separateur} />
+
+          <TouchableOpacity onPress={onRetour} style={styles.lienCentre}>
+            <Text style={styles.lienGris}>
+              J'ai déjà un compte ? <Text style={styles.lienOr}>Se connecter</Text>
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -79,15 +98,29 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#15326B" },
-  scroll: { padding: 24, paddingTop: 70, paddingBottom: 40 },
-  titre: { color: "#E8A33D", fontSize: 28, fontWeight: "500", textAlign: "center" },
-  sousTitre: { color: "#FBF8F2", textAlign: "center", fontSize: 13, opacity: 0.8, marginTop: 6, marginBottom: 28 },
-  carte: { backgroundColor: "#FBF8F2", borderRadius: 20, padding: 22 },
-  label: { color: "#15326B", fontSize: 13, fontWeight: "500", marginBottom: 6, marginTop: 12 },
-  input: { backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#d8d2c4", borderRadius: 11, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: "#2a2a28" },
-  bouton: { backgroundColor: "#E8A33D", borderRadius: 12, paddingVertical: 15, alignItems: "center", marginTop: 24 },
-  boutonTexte: { color: "#15326B", fontWeight: "500", fontSize: 16 },
-  lien: { marginTop: 16, alignItems: "center" },
-  lienTexte: { color: "#15326B", fontSize: 13.5 },
+  container: { flex: 1, backgroundColor: colors.bleu },
+  scroll: { padding: 24, paddingTop: 70, paddingBottom: 40, flexGrow: 1, justifyContent: "center" },
+  titre: { color: colors.blanc, fontSize: 28, fontFamily: fonts.bold, textAlign: "center" },
+  sousTitre: { color: colors.blanc, textAlign: "center", fontSize: 14, opacity: 0.85, marginTop: 6, marginBottom: 28, fontFamily: fonts.regular },
+  carte: { backgroundColor: colors.blanc, borderRadius: radius.xl, padding: 24, ...shadow.carte },
+  label: { color: colors.texte, fontSize: 13, fontFamily: fonts.semibold, marginBottom: 6, marginTop: 14 },
+  input: {
+    backgroundColor: colors.fond, borderWidth: 1, borderColor: colors.bordure,
+    borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15,
+    color: colors.texte, fontFamily: fonts.regular,
+  },
+  inputMdp: {
+    flexDirection: "row", alignItems: "center", backgroundColor: colors.fond,
+    borderWidth: 1, borderColor: colors.bordure, borderRadius: radius.md, paddingHorizontal: 14,
+  },
+  inputMdpChamp: { flex: 1, paddingVertical: 13, fontSize: 15, color: colors.texte, fontFamily: fonts.regular },
+  bouton: {
+    backgroundColor: colors.or, borderRadius: radius.md, paddingVertical: 16,
+    alignItems: "center", marginTop: 24,
+  },
+  boutonTexte: { color: colors.blanc, fontFamily: fonts.semibold, fontSize: 16 },
+  separateur: { height: 1, backgroundColor: colors.bordure, marginTop: 20 },
+  lienCentre: { marginTop: 16, alignItems: "center" },
+  lienGris: { color: colors.gris, fontSize: 13.5, fontFamily: fonts.regular },
+  lienOr: { color: colors.or, fontSize: 13.5, fontFamily: fonts.semibold },
 });
