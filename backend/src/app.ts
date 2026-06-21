@@ -11,6 +11,7 @@ import annonceRoutes from "./routes/annonce.routes.js";
 import membreRoutes from "./routes/membre.routes.js";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.js";
+import coordonneesRoutes from "./routes/coordonnees.routes.js";
 dotenv.config();
 
 const app = express();
@@ -37,6 +38,7 @@ app.use("/api/paiements", paiementRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/annonces", annonceRoutes);
 app.use("/api/membres", membreRoutes);
+app.use("/api/coordonnees", coordonneesRoutes);
 // Documentation Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

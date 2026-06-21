@@ -82,3 +82,15 @@ model Recu {
 
   @@map("recu")
 }
+
+model CoordonneesPaiement {
+  id          Int      @id @default(autoincrement())
+  iban        String?  @db.VarChar(34)
+  titulaire   String?  @map("titulaire") @db.VarChar(150)
+  reference   String?  @db.VarChar(100)
+  numeroWero  String?  @map("numero_wero") @db.VarChar(30)
+  noteCarte   String?  @map("note_carte") @db.VarChar(255)
+  miseAJour   DateTime @updatedAt @map("mise_a_jour")
+
+  @@map("coordonnees_paiement")
+}

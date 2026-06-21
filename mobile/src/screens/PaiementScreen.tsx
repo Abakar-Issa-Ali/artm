@@ -6,6 +6,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { getMesCotisations } from "../services/cotisation.service";
 import { declarerPaiement } from "../services/paiement.service";
+import { getCoordonnees } from "../services/coordonnees.service";
 import Toast from "../components/Toast";
 import { colors, radius, shadow, fonts } from "../theme/theme";
 
@@ -18,6 +19,7 @@ const MODES = [
 
 export default function PaiementScreen() {
   const [aRegler, setARegler] = useState<any[]>([]);
+  const [coordonnees, setCoordonnees] = useState<any>(null);
   const [chargement, setChargement] = useState(true);
   const [refresh, setRefresh] = useState(false);
   const [selection, setSelection] = useState<any>(null);
@@ -27,11 +29,12 @@ export default function PaiementScreen() {
 
   const charger = useCallback(async () => {
     try {
-      const result = await getMesCotisations();
+      const [result, coords] = await Promise.all([getMesCotisations(), getCoordonnees()]);
       const reglables = (result.cotisations || []).filter(
         (c: any) => c.statut === "due" || c.statut === "en_retard"
       );
       setARegler(reglables);
+      setCoordonnees(coords);
     } catch (error) {
       console.log("Erreur paiement", error);
     } finally {
@@ -123,10 +126,35 @@ export default function PaiementScreen() {
                   );
                 })}
 
+                {/* Coordonnées selon le mode choisi */}
                 {mode === "virement" && (
                   <View style={styles.coordonnees}>
+                    {coordonnees?.iban || coordonnees?.titulaire || coordonnees?.reference ? (
+                      <Text style={styles.coordTexte}>
+                        {coordonnees?.titulaire ? `Titulaire : ${coordonnees.titulaire}\n` : ""}
+                        {coordonnees?.iban ? `IBAN : ${coordonnees.iban}\n` : ""}
+                        {coordonnees?.reference ? `Référence : ${coordonnees.reference}` : `Référence : ARTM-${selection.annee}-${String(selection.mois).padStart(2, "0")}`}
+                      </Text>
+                    ) : (
+                      <Text style={styles.coordTexte}>Coordonnées bancaires non renseignées. Contactez le trésorier.</Text>
+                    )}
+                  </View>
+                )}
+
+                {mode === "wero" && (
+                  <View style={styles.coordonnees}>
                     <Text style={styles.coordTexte}>
-                      IBAN : FR76 0000 0000 0000{"\n"}Référence : ARTM-{selection.annee}-{String(selection.mois).padStart(2, "0")}
+                      {coordonnees?.numeroWero
+                        ? `Numéro Wero : ${coordonnees.numeroWero}`
+                        : "Numéro Wero non renseigné. Contactez le trésorier."}
+                    </Text>
+                  </View>
+                )}
+
+                {mode === "stripe" && (
+                  <View style={styles.coordonnees}>
+                    <Text style={styles.coordTexte}>
+                      {coordonnees?.noteCarte || "Le paiement par carte n'est pas encore disponible."}
                     </Text>
                   </View>
                 )}

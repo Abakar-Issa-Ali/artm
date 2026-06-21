@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import api from "../config/api";
 import ModifierProfilScreen from "./ModifierProfilScreen";
+import CoordonneesScreen from "./tresorier/CoordonneesScreen";
 import { colors, radius, shadow, fonts } from "../theme/theme";
 
 const MOIS = ["", "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
@@ -14,6 +15,7 @@ export default function ProfilScreen() {
   const [profil, setProfil] = useState<any>(null);
   const [chargement, setChargement] = useState(true);
   const [edition, setEdition] = useState(false);
+  const [afficheCoordonnees, setAfficheCoordonnees] = useState(false);
   const [confirmDeco, setConfirmDeco] = useState(false);
 
   const charger = useCallback(async () => {
@@ -37,6 +39,10 @@ export default function ProfilScreen() {
         onAnnuler={() => setEdition(false)}
       />
     );
+  }
+
+  if (afficheCoordonnees) {
+    return <CoordonneesScreen onRetour={() => setAfficheCoordonnees(false)} />;
   }
 
   if (chargement) {
@@ -76,6 +82,13 @@ export default function ProfilScreen() {
           <Ionicons name="create-outline" size={18} color={colors.bleu} style={{ marginRight: 8 }} />
           <Text style={styles.modifierTexte}>Modifier mon profil</Text>
         </TouchableOpacity>
+
+        {membre?.role === "tresorier" && (
+          <TouchableOpacity style={styles.coordonnees} onPress={() => setAfficheCoordonnees(true)} activeOpacity={0.85}>
+            <Ionicons name="card-outline" size={18} color={colors.bleu} style={{ marginRight: 8 }} />
+            <Text style={styles.coordonneesTexte}>Coordonnées de paiement</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity style={styles.deconnexion} onPress={() => setConfirmDeco(true)} activeOpacity={0.85}>
           <Ionicons name="log-out-outline" size={18} color={colors.rouge} style={{ marginRight: 8 }} />
@@ -133,6 +146,8 @@ const styles = StyleSheet.create({
   ligneValeur: { color: colors.texte, fontSize: 15, fontFamily: fonts.medium },
   modifier: { flexDirection: "row", backgroundColor: colors.blanc, borderWidth: 1.5, borderColor: colors.bleu, borderRadius: radius.md, paddingVertical: 14, alignItems: "center", justifyContent: "center", marginTop: 18 },
   modifierTexte: { color: colors.bleu, fontFamily: fonts.semibold, fontSize: 15 },
+  coordonnees: { flexDirection: "row", backgroundColor: colors.blanc, borderWidth: 1.5, borderColor: colors.bleu, borderRadius: radius.md, paddingVertical: 14, alignItems: "center", justifyContent: "center", marginTop: 12 },
+  coordonneesTexte: { color: colors.bleu, fontFamily: fonts.semibold, fontSize: 15 },
   deconnexion: { flexDirection: "row", backgroundColor: colors.blanc, borderWidth: 1.5, borderColor: colors.rouge, borderRadius: radius.md, paddingVertical: 14, alignItems: "center", justifyContent: "center", marginTop: 12 },
   deconnexionTexte: { color: colors.rouge, fontFamily: fonts.semibold, fontSize: 15 },
   overlay: { flex: 1, backgroundColor: "rgba(30,41,59,0.45)", justifyContent: "flex-end" },
