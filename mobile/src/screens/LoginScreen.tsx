@@ -35,7 +35,7 @@ export default function LoginScreen({ onInscription, onMotDePasseOublie }: { onI
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Image
-        source={require("../../assets/logo-artm.png")}
+        source={require("../../assets/logo.png")}
         style={styles.logoImage}
         resizeMode="contain"
       />
@@ -74,7 +74,7 @@ export default function LoginScreen({ onInscription, onMotDePasseOublie }: { onI
           disabled={chargement}
         >
           {chargement ? (
-            <ActivityIndicator color="#15326B" />
+            <ActivityIndicator color="#2d3c5a" />
           ) : (
             <Text style={styles.boutonTexte}>Se connecter</Text>
           )}
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   lien: { marginTop: 16, alignItems: "center" },
   lienTexte: { color: "#15326B", fontSize: 13.5 },
   container: { flex: 1, backgroundColor: "#15326B", justifyContent: "center", padding: 24 },
-  logoImage: { width: 400, height: 200, alignSelf: "center", marginBottom: -45 },
+  logoImage: { width: 400, height: 200, alignSelf: "center", marginBottom: -35 },
   logo: { alignItems: "center", marginBottom: 2 },
   logoTexte: { color: "#E8A33D", fontSize: 44, fontWeight: "500", letterSpacing: 2 },
   sousTitre: { color: "#FBF8F2", textAlign: "center", fontSize: 13, opacity: 0.8, marginBottom: 36, lineHeight: 19 },
