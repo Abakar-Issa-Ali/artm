@@ -38,7 +38,7 @@ export default function LoginScreen({ onInscription, onMotDePasseOublie }: { onI
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {/* En-tête avec logo */}
         <View style={styles.entete}>
-          <Image source={require("../../assets/logo.png")} style={styles.logoImage} resizeMode="contain" />
+          <Image source={require("../../assets/unity.png")} style={styles.logoImage} resizeMode="contain" />
           <Text style={styles.logoTexte}>ARTM</Text>
           <Text style={styles.sousTitre}>Association des Ressortissants{"\n"}Tchadiens à Marseille</Text>
         </View>
