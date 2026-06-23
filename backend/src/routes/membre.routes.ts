@@ -41,6 +41,20 @@ router.get("/resume", authenticate, authorize("tresorier"), membreController.res
 
 /**
  * @swagger
+ * /api/membres/moi:
+ *   delete:
+ *     summary: Le membre connecté supprime définitivement son propre compte (RGPD)
+ *     tags: [Membres]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Compte supprimé }
+ *       401: { description: Non authentifié }
+ */
+router.delete("/moi", authenticate, membreController.supprimerMonCompte);
+
+/**
+ * @swagger
  * /api/membres/{id}/relancer:
  *   post:
  *     summary: Envoie une relance à un membre (trésorier)

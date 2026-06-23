@@ -29,13 +29,20 @@ export async function declarerPaiement(
   if (cotisation.membreId !== membreId) {
     throw new Error("Cette cotisation ne vous appartient pas");
   }
-  // Vérifie qu'il n'y a pas déjà un paiement (RG3)
-  if (cotisation.paiement) {
+
+  // Un paiement rejeté ne bloque pas : le membre peut redéclarer.
+  if (cotisation.paiement && cotisation.paiement.statut !== "rejete") {
     throw new Error("Un paiement existe déjà pour cette cotisation");
   }
+
   // On ne paie pas une cotisation déjà payée
   if (cotisation.statut === "payee") {
     throw new Error("Cette cotisation est déjà payée");
+  }
+
+  // S'il existe un ancien paiement rejeté, on le supprime avant d'en recréer un
+  if (cotisation.paiement && cotisation.paiement.statut === "rejete") {
+    await prisma.paiement.delete({ where: { id: cotisation.paiement.id } });
   }
 
   // Crée le paiement au statut "declare" et passe la cotisation "en_attente"

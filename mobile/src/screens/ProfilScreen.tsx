@@ -4,8 +4,10 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import api from "../config/api";
+import { supprimerMonCompte } from "../services/membre.service";
 import ModifierProfilScreen from "./ModifierProfilScreen";
 import CoordonneesScreen from "./tresorier/CoordonneesScreen";
+import Toast from "../components/Toast";
 import { colors, radius, shadow, fonts } from "../theme/theme";
 
 const MOIS = ["", "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
@@ -17,6 +19,9 @@ export default function ProfilScreen() {
   const [edition, setEdition] = useState(false);
   const [afficheCoordonnees, setAfficheCoordonnees] = useState(false);
   const [confirmDeco, setConfirmDeco] = useState(false);
+  const [confirmSuppr, setConfirmSuppr] = useState(false);
+  const [suppression, setSuppression] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
 
   const charger = useCallback(async () => {
     try {
@@ -30,6 +35,20 @@ export default function ProfilScreen() {
   }, []);
 
   useFocusEffect(useCallback(() => { charger(); }, [charger]));
+
+  async function executerSuppression() {
+    setSuppression(true);
+    try {
+      await supprimerMonCompte();
+      // Compte supprimé → on déconnecte (retour à l'écran de connexion)
+      await deconnexion();
+    } catch (error: any) {
+      setConfirmSuppr(false);
+      setToast({ message: error.response?.data?.error || "Suppression impossible", type: "erreur" });
+    } finally {
+      setSuppression(false);
+    }
+  }
 
   if (edition && profil) {
     return (
@@ -94,8 +113,13 @@ export default function ProfilScreen() {
           <Ionicons name="log-out-outline" size={18} color={colors.rouge} style={{ marginRight: 8 }} />
           <Text style={styles.deconnexionTexte}>Se déconnecter</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.supprimer} onPress={() => setConfirmSuppr(true)} activeOpacity={0.7}>
+          <Text style={styles.supprimerTexte}>Supprimer mon compte</Text>
+        </TouchableOpacity>
       </View>
 
+      {/* Confirmation de déconnexion */}
       <Modal visible={confirmDeco} transparent animationType="fade" onRequestClose={() => setConfirmDeco(false)}>
         <Pressable style={styles.overlay} onPress={() => setConfirmDeco(false)}>
           <Pressable style={styles.sheet} onPress={() => {}}>
@@ -112,6 +136,33 @@ export default function ProfilScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* Confirmation de suppression de compte */}
+      <Modal visible={confirmSuppr} transparent animationType="fade" onRequestClose={() => !suppression && setConfirmSuppr(false)}>
+        <Pressable style={styles.overlay} onPress={() => !suppression && setConfirmSuppr(false)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <View style={styles.supprPastille}>
+              <Ionicons name="warning-outline" size={28} color={colors.rouge} />
+            </View>
+            <Text style={styles.sheetTitre}>Supprimer mon compte</Text>
+            <Text style={styles.sheetSous}>
+              Cette action est définitive et irréversible. Toutes vos données personnelles seront effacées. Voulez-vous vraiment continuer ?
+            </Text>
+
+            <TouchableOpacity style={styles.sheetDeco} onPress={executerSuppression} disabled={suppression} activeOpacity={0.85}>
+              {suppression
+                ? <ActivityIndicator color={colors.blanc} />
+                : <Text style={styles.sheetDecoTexte}>Supprimer définitivement</Text>}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.sheetAnnuler} onPress={() => setConfirmSuppr(false)} disabled={suppression}>
+              <Text style={styles.sheetAnnulerTexte}>Annuler</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Toast message={toast?.message || null} type={toast?.type} onHide={() => setToast(null)} />
     </ScrollView>
   );
 }
@@ -150,10 +201,13 @@ const styles = StyleSheet.create({
   coordonneesTexte: { color: colors.bleu, fontFamily: fonts.semibold, fontSize: 15 },
   deconnexion: { flexDirection: "row", backgroundColor: colors.blanc, borderWidth: 1.5, borderColor: colors.rouge, borderRadius: radius.md, paddingVertical: 14, alignItems: "center", justifyContent: "center", marginTop: 12 },
   deconnexionTexte: { color: colors.rouge, fontFamily: fonts.semibold, fontSize: 15 },
+  supprimer: { alignItems: "center", marginTop: 20, paddingVertical: 8 },
+  supprimerTexte: { color: colors.grisClair, fontFamily: fonts.medium, fontSize: 13.5, textDecorationLine: "underline" },
   overlay: { flex: 1, backgroundColor: "rgba(30,41,59,0.45)", justifyContent: "flex-end" },
   sheet: { backgroundColor: colors.blanc, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 22, paddingBottom: 32 },
+  supprPastille: { alignSelf: "center", width: 56, height: 56, borderRadius: 28, backgroundColor: colors.badgeRougeFond, alignItems: "center", justifyContent: "center", marginBottom: 12 },
   sheetTitre: { fontSize: 18, fontFamily: fonts.bold, color: colors.texte, textAlign: "center" },
-  sheetSous: { fontSize: 13.5, color: colors.gris, textAlign: "center", marginTop: 4, marginBottom: 20, fontFamily: fonts.regular },
+  sheetSous: { fontSize: 13.5, color: colors.gris, textAlign: "center", marginTop: 4, marginBottom: 20, fontFamily: fonts.regular, lineHeight: 20 },
   sheetDeco: { backgroundColor: colors.rouge, borderRadius: radius.md, paddingVertical: 15, marginBottom: 9 },
   sheetDecoTexte: { color: colors.blanc, fontSize: 15, fontFamily: fonts.semibold, textAlign: "center" },
   sheetAnnuler: { paddingVertical: 13 },

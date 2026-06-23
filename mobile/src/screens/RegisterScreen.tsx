@@ -15,7 +15,10 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
+  const [confirmation, setConfirmation] = useState("");
   const [voirMdp, setVoirMdp] = useState(false);
+  const [voirConfirm, setVoirConfirm] = useState(false);
+  const [accepteConditions, setAccepteConditions] = useState(false);
   const [chargement, setChargement] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
 
@@ -26,6 +29,14 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
     }
     if (motDePasse.length < 6) {
       setToast({ message: "Le mot de passe doit faire au moins 6 caractères.", type: "erreur" });
+      return;
+    }
+    if (motDePasse !== confirmation) {
+      setToast({ message: "Les deux mots de passe ne correspondent pas.", type: "erreur" });
+      return;
+    }
+    if (!accepteConditions) {
+      setToast({ message: "Vous devez accepter les conditions d'utilisation.", type: "erreur" });
       return;
     }
     setChargement(true);
@@ -79,6 +90,31 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
             </TouchableOpacity>
           </View>
 
+          <Text style={styles.label}>Confirmer le mot de passe</Text>
+          <View style={styles.inputMdp}>
+            <TextInput
+              style={styles.inputMdpChamp}
+              value={confirmation}
+              onChangeText={setConfirmation}
+              placeholder="••••••••"
+              placeholderTextColor={colors.grisClair}
+              secureTextEntry={!voirConfirm}
+            />
+            <TouchableOpacity onPress={() => setVoirConfirm(!voirConfirm)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name={voirConfirm ? "eye-off-outline" : "eye-outline"} size={20} color={colors.gris} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Conditions d'utilisation */}
+          <TouchableOpacity style={styles.conditions} onPress={() => setAccepteConditions(!accepteConditions)} activeOpacity={0.7}>
+            <View style={[styles.checkbox, accepteConditions && styles.checkboxCoche]}>
+              {accepteConditions && <Ionicons name="checkmark" size={14} color={colors.blanc} />}
+            </View>
+            <Text style={styles.conditionsTexte}>
+              J'accepte les conditions d'utilisation et la politique de confidentialité de l'ARTM.
+            </Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.bouton} onPress={gererInscription} disabled={chargement} activeOpacity={0.85}>
             {chargement ? <ActivityIndicator color={colors.blanc} /> : <Text style={styles.boutonTexte}>Créer mon compte</Text>}
           </TouchableOpacity>
@@ -114,6 +150,13 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.bordure, borderRadius: radius.md, paddingHorizontal: 14,
   },
   inputMdpChamp: { flex: 1, paddingVertical: 13, fontSize: 15, color: colors.texte, fontFamily: fonts.regular },
+  conditions: { flexDirection: "row", alignItems: "flex-start", marginTop: 18 },
+  checkbox: {
+    width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: colors.grisClair,
+    alignItems: "center", justifyContent: "center", marginRight: 10, marginTop: 1,
+  },
+  checkboxCoche: { backgroundColor: colors.bleu, borderColor: colors.bleu },
+  conditionsTexte: { flex: 1, color: colors.gris, fontSize: 13, lineHeight: 19, fontFamily: fonts.regular },
   bouton: {
     backgroundColor: colors.or, borderRadius: radius.md, paddingVertical: 16,
     alignItems: "center", marginTop: 24,

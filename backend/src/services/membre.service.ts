@@ -68,21 +68,47 @@ export async function reactiverMembre(membreId: number) {
 export async function supprimerMembre(membreId: number) {
   // Transaction : on supprime dans l'ordre pour respecter les clés étrangères
   await prisma.$transaction(async (tx) => {
-    // 1. Les reçus liés aux paiements du membre
+    //  Les reçus liés aux paiements du membre
     const paiements = await tx.paiement.findMany({ where: { membreId } });
     const paiementIds = paiements.map((p) => p.id);
     if (paiementIds.length > 0) {
       await tx.recu.deleteMany({ where: { paiementId: { in: paiementIds } } });
     }
-    // 2. Les paiements
+    //  Les paiements
     await tx.paiement.deleteMany({ where: { membreId } });
-    // 3. Les cotisations
+    //  Les cotisations
     await tx.cotisation.deleteMany({ where: { membreId } });
-    // 4. Le membre lui-même
+    //  Le membre lui-même
     await tx.membre.delete({ where: { id: membreId } });
   });
   return { message: "Membre supprimé définitivement" };
 }
+// Suppression de son propre compte par le membre (droit à l'effacement RGPD)
+export async function supprimerSonCompte(membreId: number) {
+  // On récupère le membre avant suppression (pour le nom dans la notification)
+  const membre = await prisma.membre.findUnique({ where: { id: membreId } });
+  if (!membre) {
+    throw new Error("Membre introuvable");
+  }
+
+  // On prévient les trésoriers qu'un membre a quitté l'association
+  const tresoriers = await prisma.membre.findMany({
+    where: { role: { libelle: "tresorier" }, actif: true },
+  });
+  for (const tresorier of tresoriers) {
+    // On ne se notifie pas soi-même si le trésorier supprime son propre compte
+    if (tresorier.id === membreId) continue;
+    await notificationRepo.create({
+      membreId: tresorier.id,
+      type: "depart_membre",
+      contenu: `${membre.prenom} ${membre.nom} a supprimé son compte.`,
+    });
+  }
+
+  // On réutilise la suppression complète existante
+  return supprimerMembre(membreId);
+}
+
 // Calcule un résumé global pour le tableau de bord trésorier
 export async function getResume() {
   const membresActifs = await prisma.membre.count({ where: { actif: true } });

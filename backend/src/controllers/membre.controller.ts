@@ -75,3 +75,17 @@ export async function relancer(req: AuthRequest, res: Response) {
     return res.status(400).json({ error: message });
   }
 }
+// Le membre connecté supprime son propre compte (droit à l'effacement RGPD)
+export async function supprimerMonCompte(req: AuthRequest, res: Response) {
+  try {
+    const membreId = req.membre?.id;
+    if (!membreId) {
+      return res.status(401).json({ error: "Non authentifié" });
+    }
+    const resultat = await membreService.supprimerSonCompte(membreId);
+    return res.status(200).json(resultat);
+  } catch (error: any) {
+    console.error("Erreur supprimerMonCompte", error);
+    return res.status(400).json({ error: error.message || "Suppression impossible" });
+  }
+}
