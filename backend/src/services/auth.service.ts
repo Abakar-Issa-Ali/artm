@@ -1,5 +1,6 @@
 import prisma from "../config/prisma.js";
 import { hashPassword, verifyPassword, generateToken } from "../utils/auth.js";
+import { envoyerCodeReinitialisation } from "./email.service";
 
 interface RegisterInput {
   nom: string;
@@ -136,4 +137,57 @@ export async function updateProfile(
     montantCotisation: membre.role.montantCotisation,
     dateAdhesion: membre.dateAdhesion,
   };
+}
+// Demande de réinitialisation : génère un code et l'envoie par email
+export async function demanderReset(email: string) {
+  const membre = await prisma.membre.findUnique({
+    where: { email: email.trim().toLowerCase() },
+  });
+
+  // Sécurité : on renvoie toujours un succès, même si l'email n'existe pas
+  // (pour ne pas révéler quels emails sont enregistrés)
+  if (!membre) return;
+
+  // Génère un code à 6 chiffres
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expire = new Date(Date.now() + 15 * 60 * 1000); // +15 minutes
+
+  await prisma.membre.update({
+    where: { id: membre.id },
+    data: { codeReset: code, codeResetExpire: expire },
+  });
+
+  await envoyerCodeReinitialisation(membre.email, code);
+}
+
+// Vérifie le code et change le mot de passe
+export async function reinitialiserMotDePasse(email: string, code: string, nouveauMotDePasse: string) {
+  const membre = await prisma.membre.findUnique({
+    where: { email: email.trim().toLowerCase() },
+  });
+
+  if (!membre || !membre.codeReset || !membre.codeResetExpire) {
+    throw new Error("Demande invalide ou expirée.");
+  }
+
+  // Vérifie le code
+  if (membre.codeReset !== code.trim()) {
+    throw new Error("Code incorrect.");
+  }
+
+  // Vérifie l'expiration
+  if (membre.codeResetExpire < new Date()) {
+    throw new Error("Le code a expiré. Merci de refaire une demande.");
+  }
+
+  if (nouveauMotDePasse.length < 6) {
+    throw new Error("Le mot de passe doit faire au moins 6 caractères.");
+  }
+
+  // Hache le nouveau mot de passe et efface le code
+  const hash = await hashPassword(nouveauMotDePasse);
+  await prisma.membre.update({
+    where: { id: membre.id },
+    data: { motDePasse: hash, codeReset: null, codeResetExpire: null },
+  });
 }

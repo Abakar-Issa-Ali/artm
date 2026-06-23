@@ -1,9 +1,12 @@
 import { useState, useCallback } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, Modal, Pressable } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import api from "../config/api";
 import ModifierProfilScreen from "./ModifierProfilScreen";
+import CoordonneesScreen from "./tresorier/CoordonneesScreen";
+import { colors, radius, shadow, fonts } from "../theme/theme";
 
 const MOIS = ["", "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
@@ -12,6 +15,7 @@ export default function ProfilScreen() {
   const [profil, setProfil] = useState<any>(null);
   const [chargement, setChargement] = useState(true);
   const [edition, setEdition] = useState(false);
+  const [afficheCoordonnees, setAfficheCoordonnees] = useState(false);
   const [confirmDeco, setConfirmDeco] = useState(false);
 
   const charger = useCallback(async () => {
@@ -27,10 +31,6 @@ export default function ProfilScreen() {
 
   useFocusEffect(useCallback(() => { charger(); }, [charger]));
 
-  function confirmerDeconnexion() {
-      setConfirmDeco(true);
-  }
-
   if (edition && profil) {
     return (
       <ModifierProfilScreen
@@ -41,18 +41,20 @@ export default function ProfilScreen() {
     );
   }
 
+  if (afficheCoordonnees) {
+    return <CoordonneesScreen onRetour={() => setAfficheCoordonnees(false)} />;
+  }
+
   if (chargement) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#15326B" />
+        <ActivityIndicator size="large" color={colors.bleu} />
       </View>
     );
   }
 
-  // Initiales pour l'avatar
   const initiales = `${profil?.prenom?.[0] || ""}${profil?.nom?.[0] || ""}`.toUpperCase();
 
-  // Date d'adhésion lisible
   let adhesion = "";
   if (profil?.dateAdhesion) {
     const d = new Date(profil.dateAdhesion);
@@ -60,7 +62,7 @@ export default function ProfilScreen() {
   }
 
   return (
-    <ScrollView style={styles.page}>
+    <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
       <View style={styles.header}>
         <View style={styles.avatar}>
           <Text style={styles.avatarTexte}>{initiales}</Text>
@@ -71,26 +73,36 @@ export default function ProfilScreen() {
 
       <View style={styles.contenu}>
         <View style={styles.carte}>
-          <Ligne label="Email" valeur={profil?.email} />
-          <Ligne label="Téléphone" valeur={profil?.telephone || "Non renseigné"} />
-          <Ligne label="Rôle" valeur={`${profil?.role} · ${Number(profil?.montantCotisation).toFixed(2)} €/mois`} derniere />
+          <Ligne icone="mail-outline" label="Email" valeur={profil?.email} />
+          <Ligne icone="call-outline" label="Téléphone" valeur={profil?.telephone || "Non renseigné"} />
+          <Ligne icone="person-outline" label="Rôle" valeur={`${profil?.role} · ${Number(profil?.montantCotisation).toFixed(2)} €/mois`} derniere />
         </View>
 
-        <TouchableOpacity style={styles.modifier} onPress={() => setEdition(true)}>
+        <TouchableOpacity style={styles.modifier} onPress={() => setEdition(true)} activeOpacity={0.85}>
+          <Ionicons name="create-outline" size={18} color={colors.bleu} style={{ marginRight: 8 }} />
           <Text style={styles.modifierTexte}>Modifier mon profil</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.deconnexion} onPress={confirmerDeconnexion}>
+        {membre?.role === "tresorier" && (
+          <TouchableOpacity style={styles.coordonnees} onPress={() => setAfficheCoordonnees(true)} activeOpacity={0.85}>
+            <Ionicons name="card-outline" size={18} color={colors.bleu} style={{ marginRight: 8 }} />
+            <Text style={styles.coordonneesTexte}>Coordonnées de paiement</Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity style={styles.deconnexion} onPress={() => setConfirmDeco(true)} activeOpacity={0.85}>
+          <Ionicons name="log-out-outline" size={18} color={colors.rouge} style={{ marginRight: 8 }} />
           <Text style={styles.deconnexionTexte}>Se déconnecter</Text>
         </TouchableOpacity>
       </View>
+
       <Modal visible={confirmDeco} transparent animationType="fade" onRequestClose={() => setConfirmDeco(false)}>
         <Pressable style={styles.overlay} onPress={() => setConfirmDeco(false)}>
           <Pressable style={styles.sheet} onPress={() => {}}>
             <Text style={styles.sheetTitre}>Déconnexion</Text>
             <Text style={styles.sheetSous}>Voulez-vous vraiment vous déconnecter ?</Text>
 
-            <TouchableOpacity style={styles.sheetDeco} onPress={deconnexion}>
+            <TouchableOpacity style={styles.sheetDeco} onPress={deconnexion} activeOpacity={0.85}>
               <Text style={styles.sheetDecoTexte}>Se déconnecter</Text>
             </TouchableOpacity>
 
@@ -104,38 +116,46 @@ export default function ProfilScreen() {
   );
 }
 
-function Ligne({ label, valeur, derniere }: { label: string; valeur: string; derniere?: boolean }) {
+function Ligne({ icone, label, valeur, derniere }: { icone: any; label: string; valeur: string; derniere?: boolean }) {
   return (
     <View style={[styles.ligne, derniere && { borderBottomWidth: 0 }]}>
-      <Text style={styles.ligneLabel}>{label}</Text>
-      <Text style={styles.ligneValeur}>{valeur}</Text>
+      <View style={styles.ligneIcone}>
+        <Ionicons name={icone} size={18} color={colors.bleu} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.ligneLabel}>{label}</Text>
+        <Text style={styles.ligneValeur}>{valeur}</Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  modifier: { backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#d8d2c4", borderRadius: 12, paddingVertical: 13, alignItems: "center", marginTop: 16 },
-  modifierTexte: { color: "#15326B", fontWeight: "500", fontSize: 14 },  
-  page: { flex: 1, backgroundColor: "#FBF8F2" },
-  loader: { flex: 1, backgroundColor: "#FBF8F2", alignItems: "center", justifyContent: "center" },
-  header: { backgroundColor: "#15326B", paddingTop: 60, paddingBottom: 28, alignItems: "center" },
-  avatar: { width: 70, height: 70, borderRadius: 35, backgroundColor: "#E8A33D", alignItems: "center", justifyContent: "center", marginBottom: 12 },
-  avatarTexte: { color: "#15326B", fontSize: 26, fontWeight: "500" },
-  nom: { color: "#FBF8F2", fontSize: 18, fontWeight: "500" },
-  adhesion: { color: "#FBF8F2", opacity: 0.7, fontSize: 12.5, marginTop: 4 },
+  page: { flex: 1, backgroundColor: colors.fond },
+  loader: { flex: 1, backgroundColor: colors.fond, alignItems: "center", justifyContent: "center" },
+  header: { backgroundColor: colors.bleu, paddingTop: 60, paddingBottom: 30, alignItems: "center", borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+  avatar: { width: 84, height: 84, borderRadius: 42, backgroundColor: colors.or, alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  avatarTexte: { color: colors.blanc, fontSize: 30, fontFamily: fonts.bold },
+  nom: { color: colors.blanc, fontSize: 20, fontFamily: fonts.bold },
+  adhesion: { color: colors.blanc, opacity: 0.8, fontSize: 13, marginTop: 4, fontFamily: fonts.regular },
   contenu: { padding: 20 },
-  carte: { backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#ece6d8", borderRadius: 13, overflow: "hidden" },
-  ligne: { paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: "#f0ebe0" },
-  ligneLabel: { color: "#8a857c", fontSize: 12, marginBottom: 3 },
-  ligneValeur: { color: "#2a2a28", fontSize: 14.5 },
-  deconnexion: { marginTop: 20, alignItems: "center", paddingVertical: 14 },
-  deconnexionTexte: { color: "#A32D2D", fontWeight: "500", fontSize: 15 },
-  overlay: { flex: 1, backgroundColor: "rgba(21,50,107,0.45)", justifyContent: "flex-end" },
-  sheet: { backgroundColor: "#FBF8F2", borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 22, paddingBottom: 32 },
-  sheetTitre: { fontSize: 18, fontWeight: "500", color: "#15326B", textAlign: "center" },
-  sheetSous: { fontSize: 13, color: "#8a857c", textAlign: "center", marginTop: 4, marginBottom: 20 },
-  sheetDeco: { backgroundColor: "#A32D2D", borderRadius: 12, paddingVertical: 14, marginBottom: 9 },
-  sheetDecoTexte: { color: "#fff", fontSize: 15, fontWeight: "500", textAlign: "center" },
+  carte: { backgroundColor: colors.blanc, borderRadius: radius.lg, overflow: "hidden", ...shadow.carte },
+  ligne: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.bordure },
+  ligneIcone: { width: 38, height: 38, borderRadius: 10, backgroundColor: colors.fond, alignItems: "center", justifyContent: "center", marginRight: 12 },
+  ligneLabel: { color: colors.grisClair, fontSize: 12, marginBottom: 2, fontFamily: fonts.regular },
+  ligneValeur: { color: colors.texte, fontSize: 15, fontFamily: fonts.medium },
+  modifier: { flexDirection: "row", backgroundColor: colors.blanc, borderWidth: 1.5, borderColor: colors.bleu, borderRadius: radius.md, paddingVertical: 14, alignItems: "center", justifyContent: "center", marginTop: 18 },
+  modifierTexte: { color: colors.bleu, fontFamily: fonts.semibold, fontSize: 15 },
+  coordonnees: { flexDirection: "row", backgroundColor: colors.blanc, borderWidth: 1.5, borderColor: colors.bleu, borderRadius: radius.md, paddingVertical: 14, alignItems: "center", justifyContent: "center", marginTop: 12 },
+  coordonneesTexte: { color: colors.bleu, fontFamily: fonts.semibold, fontSize: 15 },
+  deconnexion: { flexDirection: "row", backgroundColor: colors.blanc, borderWidth: 1.5, borderColor: colors.rouge, borderRadius: radius.md, paddingVertical: 14, alignItems: "center", justifyContent: "center", marginTop: 12 },
+  deconnexionTexte: { color: colors.rouge, fontFamily: fonts.semibold, fontSize: 15 },
+  overlay: { flex: 1, backgroundColor: "rgba(30,41,59,0.45)", justifyContent: "flex-end" },
+  sheet: { backgroundColor: colors.blanc, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 22, paddingBottom: 32 },
+  sheetTitre: { fontSize: 18, fontFamily: fonts.bold, color: colors.texte, textAlign: "center" },
+  sheetSous: { fontSize: 13.5, color: colors.gris, textAlign: "center", marginTop: 4, marginBottom: 20, fontFamily: fonts.regular },
+  sheetDeco: { backgroundColor: colors.rouge, borderRadius: radius.md, paddingVertical: 15, marginBottom: 9 },
+  sheetDecoTexte: { color: colors.blanc, fontSize: 15, fontFamily: fonts.semibold, textAlign: "center" },
   sheetAnnuler: { paddingVertical: 13 },
-  sheetAnnulerTexte: { fontSize: 14, color: "#8a857c", textAlign: "center" },
+  sheetAnnulerTexte: { fontSize: 14, color: colors.gris, textAlign: "center", fontFamily: fonts.medium },
 });

@@ -1,7 +1,11 @@
 import { useState, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import { getPaiementsEnAttente, validerPaiement, rejeterPaiement } from "../../services/tresorier.service";
+import Confirm from "../../components/Confirm";
+import Toast from "../../components/Toast";
+import { colors, radius, shadow, fonts } from "../../theme/theme";
 
 const MOIS = ["", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
@@ -10,6 +14,8 @@ export default function ValidationScreen() {
   const [chargement, setChargement] = useState(true);
   const [refresh, setRefresh] = useState(false);
   const [traitement, setTraitement] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
+  const [confirmation, setConfirmation] = useState<any>(null);
 
   const charger = useCallback(async () => {
     try {
@@ -35,7 +41,7 @@ export default function ValidationScreen() {
       }
       await charger();
     } catch (error: any) {
-      Alert.alert("Erreur", error.response?.data?.error || "Action impossible");
+      setToast({ message: error.response?.data?.error || "Action impossible", type: "erreur" });
     } finally {
       setTraitement(null);
     }
@@ -43,14 +49,17 @@ export default function ValidationScreen() {
 
   function confirmer(id: number, action: "valider" | "rejeter", nom: string) {
     const verbe = action === "valider" ? "Valider" : "Rejeter";
-    Alert.alert(`${verbe} le paiement`, `${verbe} le paiement de ${nom} ?`, [
-      { text: "Annuler", style: "cancel" },
-      { text: verbe, onPress: () => traiter(id, action), style: action === "rejeter" ? "destructive" : "default" },
-    ]);
+    setConfirmation({
+      id, action, nom,
+      titre: `${verbe} le paiement`,
+      message: `${verbe} le paiement de ${nom} ?`,
+      texteConfirmer: verbe,
+      destructif: action === "rejeter",
+    });
   }
 
   if (chargement) {
-    return <View style={styles.loader}><ActivityIndicator size="large" color="#15326B" /></View>;
+    return <View style={styles.loader}><ActivityIndicator size="large" color={colors.bleu} /></View>;
   }
 
   return (
@@ -65,7 +74,12 @@ export default function ValidationScreen() {
         refreshControl={<RefreshControl refreshing={refresh} onRefresh={() => { setRefresh(true); charger(); }} />}
       >
         {paiements.length === 0 ? (
-          <Text style={styles.vide}>Aucun paiement en attente 🎉</Text>
+          <View style={styles.videBloc}>
+            <View style={styles.videPastille}>
+              <Ionicons name="checkmark-done" size={48} color={colors.vert} />
+            </View>
+            <Text style={styles.videTitre}>Aucun paiement en attente</Text>
+          </View>
         ) : (
           paiements.map((p) => {
             const nom = `${p.membre.prenom} ${p.membre.nom}`;
@@ -73,7 +87,10 @@ export default function ValidationScreen() {
             return (
               <View key={p.id} style={styles.carte}>
                 <View style={styles.carteHead}>
-                  <View>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarTexte}>{(p.membre.prenom?.[0] || "") + (p.membre.nom?.[0] || "")}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
                     <Text style={styles.nom}>{nom}</Text>
                     <Text style={styles.detail}>
                       {MOIS[p.cotisation.mois]} {p.cotisation.annee} · {Number(p.montant).toFixed(2)} € · {p.mode}
@@ -81,13 +98,13 @@ export default function ValidationScreen() {
                   </View>
                 </View>
                 {enCours ? (
-                  <ActivityIndicator color="#15326B" style={{ marginTop: 12 }} />
+                  <ActivityIndicator color={colors.bleu} style={{ marginTop: 12 }} />
                 ) : (
                   <View style={styles.actions}>
-                    <TouchableOpacity style={[styles.btn, styles.btnRejeter]} onPress={() => confirmer(p.id, "rejeter", nom)}>
+                    <TouchableOpacity style={[styles.btn, styles.btnRejeter]} onPress={() => confirmer(p.id, "rejeter", nom)} activeOpacity={0.85}>
                       <Text style={styles.btnRejeterTexte}>Rejeter</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.btn, styles.btnValider]} onPress={() => confirmer(p.id, "valider", nom)}>
+                    <TouchableOpacity style={[styles.btn, styles.btnValider]} onPress={() => confirmer(p.id, "valider", nom)} activeOpacity={0.85}>
                       <Text style={styles.btnValiderTexte}>Valider</Text>
                     </TouchableOpacity>
                   </View>
@@ -97,26 +114,46 @@ export default function ValidationScreen() {
           })
         )}
       </ScrollView>
+
+      <Confirm
+        visible={!!confirmation}
+        titre={confirmation?.titre || ""}
+        message={confirmation?.message}
+        texteConfirmer={confirmation?.texteConfirmer}
+        destructif={confirmation?.destructif}
+        onConfirmer={() => {
+          const c = confirmation;
+          setConfirmation(null);
+          if (c) traiter(c.id, c.action);
+        }}
+        onAnnuler={() => setConfirmation(null)}
+      />
+
+      <Toast message={toast?.message || null} type={toast?.type} onHide={() => setToast(null)} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#FBF8F2" },
-  loader: { flex: 1, backgroundColor: "#FBF8F2", alignItems: "center", justifyContent: "center" },
-  header: { backgroundColor: "#15326B", paddingTop: 60, paddingHorizontal: 20, paddingBottom: 18 },
-  headerTitre: { color: "#FBF8F2", fontSize: 18, fontWeight: "500" },
-  headerSous: { color: "#FBF8F2", opacity: 0.7, fontSize: 13, marginTop: 3 },
-  contenu: { padding: 18 },
-  vide: { color: "#0F6E56", textAlign: "center", marginTop: 40, fontSize: 15, fontWeight: "500" },
-  carte: { backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#ece6d8", borderRadius: 13, padding: 15, marginBottom: 11 },
-  carteHead: { marginBottom: 12 },
-  nom: { fontSize: 15, fontWeight: "500", color: "#15326B" },
-  detail: { fontSize: 12.5, color: "#8a857c", marginTop: 3 },
+  page: { flex: 1, backgroundColor: colors.fond },
+  loader: { flex: 1, backgroundColor: colors.fond, alignItems: "center", justifyContent: "center" },
+  header: { backgroundColor: colors.bleu, paddingTop: 60, paddingHorizontal: 20, paddingBottom: 22, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+  headerTitre: { color: colors.blanc, fontSize: 19, fontFamily: fonts.semibold },
+  headerSous: { color: colors.blanc, opacity: 0.8, fontSize: 13, marginTop: 3, fontFamily: fonts.regular },
+  contenu: { padding: 20 },
+  videBloc: { alignItems: "center", marginTop: 60 },
+  videPastille: { width: 90, height: 90, borderRadius: 45, backgroundColor: colors.badgeVertFond, alignItems: "center", justifyContent: "center", marginBottom: 16 },
+  videTitre: { color: colors.texte, fontSize: 16, fontFamily: fonts.semibold },
+  carte: { backgroundColor: colors.blanc, borderRadius: radius.lg, padding: 16, marginBottom: 12, ...shadow.carte },
+  carteHead: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
+  avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.bleu, alignItems: "center", justifyContent: "center", marginRight: 12 },
+  avatarTexte: { color: colors.blanc, fontSize: 15, fontFamily: fonts.bold },
+  nom: { fontSize: 15, fontFamily: fonts.semibold, color: colors.texte },
+  detail: { fontSize: 13, color: colors.gris, marginTop: 3, fontFamily: fonts.regular },
   actions: { flexDirection: "row", gap: 10 },
-  btn: { flex: 1, paddingVertical: 11, borderRadius: 10, alignItems: "center" },
-  btnValider: { backgroundColor: "#E8A33D" },
-  btnValiderTexte: { color: "#15326B", fontWeight: "500", fontSize: 14 },
-  btnRejeter: { backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#d8c4c4" },
-  btnRejeterTexte: { color: "#A32D2D", fontWeight: "500", fontSize: 14 },
+  btn: { flex: 1, paddingVertical: 13, borderRadius: radius.md, alignItems: "center" },
+  btnValider: { backgroundColor: colors.vert },
+  btnValiderTexte: { color: colors.blanc, fontFamily: fonts.semibold, fontSize: 14 },
+  btnRejeter: { backgroundColor: colors.blanc, borderWidth: 1.5, borderColor: colors.rouge },
+  btnRejeterTexte: { color: colors.rouge, fontFamily: fonts.semibold, fontSize: 14 },
 });
