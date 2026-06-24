@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Svg, { Circle } from "react-native-svg";
 import Confirm from "../../components/Confirm";
 import Toast from "../../components/Toast";
-import { getMembres, getResume, changerRole, desactiverMembre, reactiverMembre, supprimerMembre, relancerMembre } from "../../services/tresorier.service";
+import { getMembres, getResume, changerRole, desactiverMembre, reactiverMembre, supprimerMembre, relancerMembre, getComptesEnAttente, validerCompte } from "../../services/tresorier.service";
 import { colors, radius, shadow, fonts } from "../../theme/theme";
 
 // Petit graphique en anneau (donut) pour le taux de paiement
@@ -32,10 +32,12 @@ function Donut({ taux }: { taux: number }) {
 
 export default function MembresScreen() {
   const [membres, setMembres] = useState<any[]>([]);
+  const [enAttente, setEnAttente] = useState<any[]>([]);
   const [chargement, setChargement] = useState(true);
   const [refresh, setRefresh] = useState(false);
   const [resume, setResume] = useState<any>(null);
   const [aSupprimer, setASupprimer] = useState<any>(null);
+  const [validation, setValidation] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
   const [selection, setSelection] = useState<any>(null);
   const [menuRoleVisible, setMenuRoleVisible] = useState(false);
@@ -43,9 +45,10 @@ export default function MembresScreen() {
 
   const charger = useCallback(async () => {
     try {
-      const [data, resumeData] = await Promise.all([getMembres(), getResume()]);
+      const [data, resumeData, attenteData] = await Promise.all([getMembres(), getResume(), getComptesEnAttente()]);
       setMembres(data);
       setResume(resumeData);
+      setEnAttente(attenteData);
     } catch (error) {
       console.log("Erreur membres", error);
     } finally {
@@ -77,6 +80,19 @@ export default function MembresScreen() {
       setToast({ message: `Relance envoyée à ${m.prenom}`, type: "succes" });
     } catch (error: any) {
       setToast({ message: error.response?.data?.error || "Relance impossible", type: "erreur" });
+    }
+  }
+
+  async function valider(m: any) {
+    setValidation(m.id);
+    try {
+      await validerCompte(m.id);
+      setToast({ message: `Compte de ${m.prenom} validé`, type: "succes" });
+      await charger();
+    } catch (error: any) {
+      setToast({ message: error.response?.data?.error || "Validation impossible", type: "erreur" });
+    } finally {
+      setValidation(null);
     }
   }
 
@@ -131,6 +147,34 @@ export default function MembresScreen() {
             </View>
             <Donut taux={Number(resume.tauxPaiement) || 0} />
           </View>
+        )}
+
+        {/* Comptes en attente de validation */}
+        {enAttente.length > 0 && (
+          <>
+            <Text style={styles.section}>Comptes en attente ({enAttente.length})</Text>
+            {enAttente.map((m) => (
+              <View key={"attente" + m.id} style={styles.attenteLigne}>
+                <View style={styles.attenteIcone}>
+                  <Ionicons name="person-add-outline" size={18} color={colors.bleu} />
+                </View>
+                <View style={styles.infos}>
+                  <Text style={styles.nom}>{m.prenom} {m.nom}</Text>
+                  <Text style={styles.attenteEmail}>{m.email}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.validerBtn}
+                  onPress={() => valider(m)}
+                  disabled={validation === m.id}
+                  activeOpacity={0.85}
+                >
+                  {validation === m.id
+                    ? <ActivityIndicator color={colors.blanc} size="small" />
+                    : <Text style={styles.validerTexte}>Valider</Text>}
+                </TouchableOpacity>
+              </View>
+            ))}
+          </>
         )}
 
         {/* Membres en retard */}
@@ -274,6 +318,11 @@ const styles = StyleSheet.create({
   resumeValeur: { fontFamily: fonts.semibold, color: colors.texte },
   donutTexte: { position: "absolute", fontSize: 14, fontFamily: fonts.bold, color: colors.texte },
   section: { color: colors.gris, fontSize: 14, fontFamily: fonts.semibold, marginBottom: 12, marginTop: 4 },
+  attenteLigne: { flexDirection: "row", alignItems: "center", backgroundColor: "#EAF0FB", borderRadius: radius.md, padding: 14, marginBottom: 10 },
+  attenteIcone: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.blanc, alignItems: "center", justifyContent: "center", marginRight: 12 },
+  attenteEmail: { fontSize: 12.5, color: colors.gris, marginTop: 2, fontFamily: fonts.regular },
+  validerBtn: { backgroundColor: colors.vert, borderRadius: radius.sm, paddingVertical: 9, paddingHorizontal: 16, minWidth: 76, alignItems: "center" },
+  validerTexte: { color: colors.blanc, fontFamily: fonts.semibold, fontSize: 13 },
   retardLigne: { flexDirection: "row", alignItems: "center", backgroundColor: colors.badgeRougeFond, borderRadius: radius.md, padding: 14, marginBottom: 10 },
   retardTexte: { fontSize: 12.5, color: colors.badgeRougeTexte, marginTop: 2, fontFamily: fonts.regular },
   relanceBtn: { backgroundColor: colors.or, borderRadius: radius.sm, paddingVertical: 9, paddingHorizontal: 16 },

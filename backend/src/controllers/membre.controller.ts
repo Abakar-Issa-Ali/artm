@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import * as membreService from "../services/membre.service.js";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 
@@ -87,5 +87,27 @@ export async function supprimerMonCompte(req: AuthRequest, res: Response) {
   } catch (error: any) {
     console.error("Erreur supprimerMonCompte", error);
     return res.status(400).json({ error: error.message || "Suppression impossible" });
+  }
+}
+// Liste des comptes en attente de validation (trésorier)
+export async function comptesEnAttente(req: Request, res: Response) {
+  try {
+    const comptes = await membreService.getComptesEnAttente();
+    return res.status(200).json(comptes);
+  } catch (error: any) {
+    console.error("Erreur comptesEnAttente", error);
+    return res.status(500).json({ error: "Erreur lors de la récupération des comptes en attente." });
+  }
+}
+
+// Validation d'un compte par le trésorier
+export async function validerCompte(req: Request, res: Response) {
+  try {
+    const id = Number(req.params.id);
+    const resultat = await membreService.validerCompte(id);
+    return res.status(200).json(resultat);
+  } catch (error: any) {
+    console.error("Erreur validerCompte", error);
+    return res.status(400).json({ error: error.message || "Validation impossible" });
   }
 }

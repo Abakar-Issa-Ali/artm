@@ -15,7 +15,7 @@ interface LoginInput {
   motDePasse: string;
 }
 
-// Inscription d'un nouveau membre (rôle "membre" par défaut)
+// Inscription d'un nouveau membre (rôle "membre" par défaut, en attente de validation)
 export async function register(input: RegisterInput) {
   // Vérifie que l'email n'est pas déjà utilisé
   const existant = await prisma.membre.findUnique({
@@ -33,9 +33,9 @@ export async function register(input: RegisterInput) {
     throw new Error("Le rôle par défaut est introuvable");
   }
 
-  // Hache le mot de passe et crée le membre
+  // Hache le mot de passe et crée le membre (non validé par défaut)
   const motDePasseHache = await hashPassword(input.motDePasse);
-  const membre = await prisma.membre.create({
+  await prisma.membre.create({
     data: {
       nom: input.nom,
       prenom: input.prenom,
@@ -43,20 +43,14 @@ export async function register(input: RegisterInput) {
       telephone: input.telephone,
       motDePasse: motDePasseHache,
       roleId: roleMembre.id,
+      valide: false, // en attente de validation par le bureau
     },
   });
 
-  // Génère le token, sans renvoyer le mot de passe
-  const token = generateToken({ id: membre.id, role: roleMembre.libelle });
+  // On ne connecte pas automatiquement : le compte doit d'abord être validé
   return {
-    token,
-    membre: {
-      id: membre.id,
-      nom: membre.nom,
-      prenom: membre.prenom,
-      email: membre.email,
-      role: roleMembre.libelle,
-    },
+    enAttente: true,
+    message: "Votre compte a bien été créé. Il sera accessible après validation par le bureau ARTM.",
   };
 }
 
@@ -71,14 +65,17 @@ export async function login(input: LoginInput) {
     throw new Error("Email ou mot de passe incorrect");
   }
 
-  
-
   const motDePasseValide = await verifyPassword(
     input.motDePasse,
     membre.motDePasse
   );
   if (!motDePasseValide) {
     throw new Error("Email ou mot de passe incorrect");
+  }
+
+  // Le compte doit avoir été validé par le bureau
+  if (!membre.valide) {
+    throw new Error("Votre compte est en attente de validation par le bureau ARTM.");
   }
 
   const token = generateToken({ id: membre.id, role: membre.role.libelle });

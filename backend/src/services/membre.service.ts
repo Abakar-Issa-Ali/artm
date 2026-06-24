@@ -1,10 +1,11 @@
 import prisma from "../config/prisma.js";
 import * as notificationRepo from "../repositories/notification.repository.js";
+import { envoyerConfirmationCompte } from "./email.service.js";
 
 // Récupère tous les membres actifs avec un résumé de leur statut de cotisation
 export async function getTousMembres() {
   const membres = await prisma.membre.findMany({
-
+    where: { valide: true },
     include: {
       role: true,
       cotisations: true,
@@ -108,10 +109,55 @@ export async function supprimerSonCompte(membreId: number) {
   // On réutilise la suppression complète existante
   return supprimerMembre(membreId);
 }
+// Liste les comptes en attente de validation (valide = false)
+export async function getComptesEnAttente() {
+  const membres = await prisma.membre.findMany({
+    where: { valide: false },
+    include: { role: true },
+    orderBy: { dateAdhesion: "asc" },
+  });
+
+  return membres.map((m) => ({
+    id: m.id,
+    nom: m.nom,
+    prenom: m.prenom,
+    email: m.email,
+    telephone: m.telephone,
+    role: m.role.libelle,
+    dateAdhesion: m.dateAdhesion,
+  }));
+}
+
+// Valide le compte d'un membre (le trésorier approuve l'inscription) + email de confirmation
+export async function validerCompte(membreId: number) {
+  const membre = await prisma.membre.findUnique({ where: { id: membreId } });
+  if (!membre) {
+    throw new Error("Membre introuvable");
+  }
+  if (membre.valide) {
+    throw new Error("Ce compte est déjà validé");
+  }
+
+  // On passe le compte à validé
+  await prisma.membre.update({
+    where: { id: membreId },
+    data: { valide: true },
+  });
+
+  // On informe le membre par email qu'il peut se connecter
+  try {
+    await envoyerConfirmationCompte(membre.email, membre.prenom);
+  } catch (error) {
+    // L'email ne doit pas bloquer la validation : on log et on continue
+    console.error("Erreur envoi email de confirmation", error);
+  }
+
+  return { message: "Compte validé" };
+}
 
 // Calcule un résumé global pour le tableau de bord trésorier
 export async function getResume() {
-  const membresActifs = await prisma.membre.count({ where: { actif: true } });
+const membresActifs = await prisma.membre.count({ where: { actif: true, valide: true } });
 
   // Cotisations du mois courant
   const maintenant = new Date();

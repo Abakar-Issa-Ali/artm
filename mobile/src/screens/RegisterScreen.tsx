@@ -20,6 +20,8 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
   const [voirConfirm, setVoirConfirm] = useState(false);
   const [accepteConditions, setAccepteConditions] = useState(false);
   const [chargement, setChargement] = useState(false);
+  const [succes, setSucces] = useState(false);
+  const [prenomInscrit, setPrenomInscrit] = useState("");
   const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
 
   async function gererInscription() {
@@ -48,12 +50,36 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
         telephone: telephone.trim() || undefined,
         motDePasse,
       });
+      // Affiche l'écran de confirmation, puis redirige vers le login
+      setPrenomInscrit(prenom.trim());
+      setSucces(true);
     } catch (error: any) {
       const message = error.response?.data?.error || "Inscription impossible";
       setToast({ message, type: "erreur" });
     } finally {
       setChargement(false);
     }
+  }
+
+  // Écran de confirmation après inscription réussie
+  if (succes) {
+    return (
+      <View style={styles.succesPage}>
+        <View style={styles.succesPastille}>
+          <Ionicons name="checkmark-circle" size={72} color={colors.vert} />
+        </View>
+        <Text style={styles.succesTitre}>Merci {prenomInscrit} !</Text>
+        <Text style={styles.succesTexte}>
+          Votre compte a bien été créé. Il sera accessible une fois validé par le bureau ARTM, et vous recevrez un email de confirmation.
+        </Text>
+        <Text style={styles.succesTexte}>
+          Merci pour l'intérêt que vous portez à l'association.
+        </Text>
+        <TouchableOpacity style={styles.succesBouton} onPress={onRetour} activeOpacity={0.85}>
+          <Text style={styles.succesBoutonTexte}>Retour à la connexion</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   return (
@@ -166,4 +192,11 @@ const styles = StyleSheet.create({
   lienCentre: { marginTop: 16, alignItems: "center" },
   lienGris: { color: colors.gris, fontSize: 13.5, fontFamily: fonts.regular },
   lienOr: { color: colors.or, fontSize: 13.5, fontFamily: fonts.semibold },
+  // Écran de confirmation
+  succesPage: { flex: 1, backgroundColor: colors.bleu, alignItems: "center", justifyContent: "center", padding: 32 },
+  succesPastille: { width: 120, height: 120, borderRadius: 60, backgroundColor: colors.blanc, alignItems: "center", justifyContent: "center", marginBottom: 28 },
+  succesTitre: { color: colors.blanc, fontSize: 26, fontFamily: fonts.bold, textAlign: "center", marginBottom: 16 },
+  succesTexte: { color: colors.blanc, fontSize: 15, fontFamily: fonts.regular, textAlign: "center", lineHeight: 22, opacity: 0.9, marginBottom: 12 },
+  succesBouton: { backgroundColor: colors.or, borderRadius: radius.md, paddingVertical: 15, paddingHorizontal: 32, marginTop: 20 },
+  succesBoutonTexte: { color: colors.blanc, fontFamily: fonts.semibold, fontSize: 15 },
 });
