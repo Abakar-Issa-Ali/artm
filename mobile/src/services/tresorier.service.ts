@@ -69,3 +69,14 @@ export async function relancerMembre(membreId: number) {
   const reponse = await api.post(`/membres/${membreId}/relancer`);
   return reponse.data;
 }
+// Liste les comptes en attente de validation
+export async function getComptesEnAttente() {
+  const { data } = await api.get("/membres/en-attente");
+  return data;
+}
+
+// Valide le compte d'un membre en attente
+export async function validerCompte(membreId: number) {
+  const { data } = await api.patch(`/membres/${membreId}/valider`);
+  return data;
+}

@@ -14,7 +14,7 @@ describe("API Authentification (intégration)", () => {
   });
 
   describe("POST /api/auth/register", () => {
-    it("crée un nouveau membre et renvoie un token", async () => {
+    it("crée un nouveau compte en attente de validation", async () => {
       const reponse = await request(app)
         .post("/api/auth/register")
         .send({
@@ -24,12 +24,12 @@ describe("API Authentification (intégration)", () => {
           motDePasse,
         });
 
+      // Le compte est créé mais en attente : pas de token, mais un indicateur d'attente
       expect(reponse.status).toBe(201);
-      expect(reponse.body).toHaveProperty("token");
-      expect(reponse.body.membre.email).toBe(emailTest);
-      expect(reponse.body.membre.role).toBe("membre");
+      expect(reponse.body).toHaveProperty("enAttente", true);
+      expect(reponse.body).toHaveProperty("message");
       // Le mot de passe ne doit JAMAIS être renvoyé
-      expect(reponse.body.membre).not.toHaveProperty("motDePasse");
+      expect(reponse.body).not.toHaveProperty("motDePasse");
     });
 
     it("refuse une inscription avec un email déjà utilisé", async () => {
@@ -48,7 +48,23 @@ describe("API Authentification (intégration)", () => {
   });
 
   describe("POST /api/auth/login", () => {
-    it("connecte un membre avec les bons identifiants", async () => {
+    it("refuse la connexion d'un compte non encore validé", async () => {
+      const reponse = await request(app)
+        .post("/api/auth/login")
+        .send({ email: emailTest, motDePasse });
+
+      // Le compte existe mais n'est pas validé : connexion bloquée
+      expect(reponse.status).toBe(401);
+      expect(reponse.body).toHaveProperty("error");
+    });
+
+    it("connecte un membre validé avec les bons identifiants", async () => {
+      // On valide le compte (comme le ferait le trésorier)
+      await prisma.membre.update({
+        where: { email: emailTest },
+        data: { valide: true },
+      });
+
       const reponse = await request(app)
         .post("/api/auth/login")
         .send({ email: emailTest, motDePasse });
@@ -74,7 +90,7 @@ describe("API Authentification (intégration)", () => {
     });
 
     it("autorise l'accès avec un token valide", async () => {
-      // On se connecte pour obtenir un token
+      // Le compte a été validé dans le test de login précédent
       const login = await request(app)
         .post("/api/auth/login")
         .send({ email: emailTest, motDePasse });

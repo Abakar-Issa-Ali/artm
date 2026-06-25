@@ -15,8 +15,13 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
+  const [confirmation, setConfirmation] = useState("");
   const [voirMdp, setVoirMdp] = useState(false);
+  const [voirConfirm, setVoirConfirm] = useState(false);
+  const [accepteConditions, setAccepteConditions] = useState(false);
   const [chargement, setChargement] = useState(false);
+  const [succes, setSucces] = useState(false);
+  const [prenomInscrit, setPrenomInscrit] = useState("");
   const [toast, setToast] = useState<{ message: string; type: "succes" | "erreur" } | null>(null);
 
   async function gererInscription() {
@@ -28,6 +33,14 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
       setToast({ message: "Le mot de passe doit faire au moins 6 caractères.", type: "erreur" });
       return;
     }
+    if (motDePasse !== confirmation) {
+      setToast({ message: "Les deux mots de passe ne correspondent pas.", type: "erreur" });
+      return;
+    }
+    if (!accepteConditions) {
+      setToast({ message: "Vous devez accepter les conditions d'utilisation.", type: "erreur" });
+      return;
+    }
     setChargement(true);
     try {
       await inscription({
@@ -37,12 +50,36 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
         telephone: telephone.trim() || undefined,
         motDePasse,
       });
+      // Affiche l'écran de confirmation, puis redirige vers le login
+      setPrenomInscrit(prenom.trim());
+      setSucces(true);
     } catch (error: any) {
       const message = error.response?.data?.error || "Inscription impossible";
       setToast({ message, type: "erreur" });
     } finally {
       setChargement(false);
     }
+  }
+
+  // Écran de confirmation après inscription réussie
+  if (succes) {
+    return (
+      <View style={styles.succesPage}>
+        <View style={styles.succesPastille}>
+          <Ionicons name="checkmark-circle" size={72} color={colors.vert} />
+        </View>
+        <Text style={styles.succesTitre}>Merci {prenomInscrit} !</Text>
+        <Text style={styles.succesTexte}>
+          Votre compte a bien été créé. Il sera accessible une fois validé par le bureau ARTM, et vous recevrez un email de confirmation.
+        </Text>
+        <Text style={styles.succesTexte}>
+          Merci pour l'intérêt que vous portez à l'association.
+        </Text>
+        <TouchableOpacity style={styles.succesBouton} onPress={onRetour} activeOpacity={0.85}>
+          <Text style={styles.succesBoutonTexte}>Retour à la connexion</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   return (
@@ -79,6 +116,31 @@ export default function RegisterScreen({ onRetour }: { onRetour: () => void }) {
             </TouchableOpacity>
           </View>
 
+          <Text style={styles.label}>Confirmer le mot de passe</Text>
+          <View style={styles.inputMdp}>
+            <TextInput
+              style={styles.inputMdpChamp}
+              value={confirmation}
+              onChangeText={setConfirmation}
+              placeholder="••••••••"
+              placeholderTextColor={colors.grisClair}
+              secureTextEntry={!voirConfirm}
+            />
+            <TouchableOpacity onPress={() => setVoirConfirm(!voirConfirm)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name={voirConfirm ? "eye-off-outline" : "eye-outline"} size={20} color={colors.gris} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Conditions d'utilisation */}
+          <TouchableOpacity style={styles.conditions} onPress={() => setAccepteConditions(!accepteConditions)} activeOpacity={0.7}>
+            <View style={[styles.checkbox, accepteConditions && styles.checkboxCoche]}>
+              {accepteConditions && <Ionicons name="checkmark" size={14} color={colors.blanc} />}
+            </View>
+            <Text style={styles.conditionsTexte}>
+              J'accepte les conditions d'utilisation et la politique de confidentialité de l'ARTM.
+            </Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.bouton} onPress={gererInscription} disabled={chargement} activeOpacity={0.85}>
             {chargement ? <ActivityIndicator color={colors.blanc} /> : <Text style={styles.boutonTexte}>Créer mon compte</Text>}
           </TouchableOpacity>
@@ -114,6 +176,13 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.bordure, borderRadius: radius.md, paddingHorizontal: 14,
   },
   inputMdpChamp: { flex: 1, paddingVertical: 13, fontSize: 15, color: colors.texte, fontFamily: fonts.regular },
+  conditions: { flexDirection: "row", alignItems: "flex-start", marginTop: 18 },
+  checkbox: {
+    width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: colors.grisClair,
+    alignItems: "center", justifyContent: "center", marginRight: 10, marginTop: 1,
+  },
+  checkboxCoche: { backgroundColor: colors.bleu, borderColor: colors.bleu },
+  conditionsTexte: { flex: 1, color: colors.gris, fontSize: 13, lineHeight: 19, fontFamily: fonts.regular },
   bouton: {
     backgroundColor: colors.or, borderRadius: radius.md, paddingVertical: 16,
     alignItems: "center", marginTop: 24,
@@ -123,4 +192,11 @@ const styles = StyleSheet.create({
   lienCentre: { marginTop: 16, alignItems: "center" },
   lienGris: { color: colors.gris, fontSize: 13.5, fontFamily: fonts.regular },
   lienOr: { color: colors.or, fontSize: 13.5, fontFamily: fonts.semibold },
+  // Écran de confirmation
+  succesPage: { flex: 1, backgroundColor: colors.bleu, alignItems: "center", justifyContent: "center", padding: 32 },
+  succesPastille: { width: 120, height: 120, borderRadius: 60, backgroundColor: colors.blanc, alignItems: "center", justifyContent: "center", marginBottom: 28 },
+  succesTitre: { color: colors.blanc, fontSize: 26, fontFamily: fonts.bold, textAlign: "center", marginBottom: 16 },
+  succesTexte: { color: colors.blanc, fontSize: 15, fontFamily: fonts.regular, textAlign: "center", lineHeight: 22, opacity: 0.9, marginBottom: 12 },
+  succesBouton: { backgroundColor: colors.or, borderRadius: radius.md, paddingVertical: 15, paddingHorizontal: 32, marginTop: 20 },
+  succesBoutonTexte: { color: colors.blanc, fontFamily: fonts.semibold, fontSize: 15 },
 });

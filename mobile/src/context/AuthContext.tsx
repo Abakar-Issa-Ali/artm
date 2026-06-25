@@ -14,7 +14,7 @@ interface AuthContextType {
   membre: Membre | null;
   chargement: boolean;
   connexion: (email: string, motDePasse: string) => Promise<void>;
-  inscription: (data: any) => Promise<void>;
+  inscription: (data: any) => Promise<{ enAttente?: boolean; message?: string }>;
   deconnexion: () => Promise<void>;
 }
 
@@ -48,10 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setMembre(reponse.data.membre);
   }
 
+  // L'inscription ne connecte plus automatiquement : le compte attend la validation du trésorier.
+  // On renvoie la réponse du backend pour que l'écran affiche le message adapté.
   async function inscription(data: any) {
     const reponse = await api.post("/auth/register", data);
-    await SecureStore.setItemAsync("token", reponse.data.token);
-    setMembre(reponse.data.membre);
+    return reponse.data; // { enAttente: true, message: "..." }
   }
 
   async function deconnexion() {

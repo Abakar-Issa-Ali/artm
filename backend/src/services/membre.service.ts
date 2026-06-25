@@ -1,10 +1,11 @@
 import prisma from "../config/prisma.js";
 import * as notificationRepo from "../repositories/notification.repository.js";
+import { envoyerConfirmationCompte } from "./email.service.js";
 
 // Récupère tous les membres actifs avec un résumé de leur statut de cotisation
 export async function getTousMembres() {
   const membres = await prisma.membre.findMany({
-
+    where: { valide: true },
     include: {
       role: true,
       cotisations: true,
@@ -68,24 +69,95 @@ export async function reactiverMembre(membreId: number) {
 export async function supprimerMembre(membreId: number) {
   // Transaction : on supprime dans l'ordre pour respecter les clés étrangères
   await prisma.$transaction(async (tx) => {
-    // 1. Les reçus liés aux paiements du membre
+    //  Les reçus liés aux paiements du membre
     const paiements = await tx.paiement.findMany({ where: { membreId } });
     const paiementIds = paiements.map((p) => p.id);
     if (paiementIds.length > 0) {
       await tx.recu.deleteMany({ where: { paiementId: { in: paiementIds } } });
     }
-    // 2. Les paiements
+    //  Les paiements
     await tx.paiement.deleteMany({ where: { membreId } });
-    // 3. Les cotisations
+    //  Les cotisations
     await tx.cotisation.deleteMany({ where: { membreId } });
-    // 4. Le membre lui-même
+    //  Le membre lui-même
     await tx.membre.delete({ where: { id: membreId } });
   });
   return { message: "Membre supprimé définitivement" };
 }
+// Suppression de son propre compte par le membre (droit à l'effacement RGPD)
+export async function supprimerSonCompte(membreId: number) {
+  // On récupère le membre avant suppression (pour le nom dans la notification)
+  const membre = await prisma.membre.findUnique({ where: { id: membreId } });
+  if (!membre) {
+    throw new Error("Membre introuvable");
+  }
+
+  // On prévient les trésoriers qu'un membre a quitté l'association
+  const tresoriers = await prisma.membre.findMany({
+    where: { role: { libelle: "tresorier" }, actif: true },
+  });
+  for (const tresorier of tresoriers) {
+    // On ne se notifie pas soi-même si le trésorier supprime son propre compte
+    if (tresorier.id === membreId) continue;
+    await notificationRepo.create({
+      membreId: tresorier.id,
+      type: "depart_membre",
+      contenu: `${membre.prenom} ${membre.nom} a supprimé son compte.`,
+    });
+  }
+
+  // On réutilise la suppression complète existante
+  return supprimerMembre(membreId);
+}
+// Liste les comptes en attente de validation (valide = false)
+export async function getComptesEnAttente() {
+  const membres = await prisma.membre.findMany({
+    where: { valide: false },
+    include: { role: true },
+    orderBy: { dateAdhesion: "asc" },
+  });
+
+  return membres.map((m) => ({
+    id: m.id,
+    nom: m.nom,
+    prenom: m.prenom,
+    email: m.email,
+    telephone: m.telephone,
+    role: m.role.libelle,
+    dateAdhesion: m.dateAdhesion,
+  }));
+}
+
+// Valide le compte d'un membre (le trésorier approuve l'inscription) + email de confirmation
+export async function validerCompte(membreId: number) {
+  const membre = await prisma.membre.findUnique({ where: { id: membreId } });
+  if (!membre) {
+    throw new Error("Membre introuvable");
+  }
+  if (membre.valide) {
+    throw new Error("Ce compte est déjà validé");
+  }
+
+  // On passe le compte à validé
+  await prisma.membre.update({
+    where: { id: membreId },
+    data: { valide: true },
+  });
+
+  // On informe le membre par email qu'il peut se connecter
+  try {
+    await envoyerConfirmationCompte(membre.email, membre.prenom);
+  } catch (error) {
+    // L'email ne doit pas bloquer la validation : on log et on continue
+    console.error("Erreur envoi email de confirmation", error);
+  }
+
+  return { message: "Compte validé" };
+}
+
 // Calcule un résumé global pour le tableau de bord trésorier
 export async function getResume() {
-  const membresActifs = await prisma.membre.count({ where: { actif: true } });
+const membresActifs = await prisma.membre.count({ where: { actif: true, valide: true } });
 
   // Cotisations du mois courant
   const maintenant = new Date();

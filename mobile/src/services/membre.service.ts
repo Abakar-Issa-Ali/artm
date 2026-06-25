@@ -5,3 +5,8 @@ export async function updateProfil(data: { nom: string; prenom: string; telephon
   const reponse = await api.patch("/auth/me", data);
   return reponse.data;
 }
+// Suppression de son propre compte (RGPD)
+export async function supprimerMonCompte() {
+  const reponse = await api.delete("/membres/moi");
+  return reponse.data;
+}

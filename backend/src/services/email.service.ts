@@ -38,3 +38,33 @@ export async function envoyerCodeReinitialisation(destinataire: string, code: st
     html,
   });
 }
+export async function envoyerConfirmationCompte(destinataire: string, prenom: string) {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #ece6d8; border-radius: 12px; overflow: hidden;">
+      <div style="background-color: #15326B; padding: 20px; text-align: center;">
+        <h1 style="color: #E8A33D; margin: 0; font-size: 24px;">ARTM</h1>
+      </div>
+      <div style="padding: 24px; color: #2a2a28;">
+        <h2 style="color: #15326B; font-size: 18px;">Votre compte est validé !</h2>
+        <p>Bonjour ${prenom},</p>
+        <p>Bonne nouvelle : votre compte a été validé par le bureau de l'association. Vous pouvez désormais vous connecter à l'application ARTM et accéder à votre espace membre.</p>
+        <div style="text-align: center; margin: 24px 0;">
+          <span style="display: inline-block; background-color: #E1F5EE; border-radius: 10px; padding: 12px 24px; font-size: 15px; font-weight: bold; color: #0F6E56;">
+            Compte activé
+          </span>
+        </div>
+        <p style="color: #6b6760; font-size: 14px;">Connectez-vous avec l'email et le mot de passe que vous avez choisis lors de votre inscription.</p>
+      </div>
+      <div style="background-color: #FBF8F2; padding: 14px; text-align: center; color: #8a857c; font-size: 12px;">
+        Association des Ressortissants Tchadiens à Marseille
+      </div>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: `"ARTM" <${process.env.EMAIL_USER}>`,
+    to: destinataire,
+    subject: "Votre compte ARTM a été validé",
+    html,
+  });
+}

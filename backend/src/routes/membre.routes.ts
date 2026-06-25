@@ -38,6 +38,33 @@ router.get("/", authenticate, authorize("tresorier"), membreController.liste);
  *       200: { description: Résumé (membres actifs, encaissement, taux) }
  */
 router.get("/resume", authenticate, authorize("tresorier"), membreController.resume);
+/**
+ * @swagger
+ * /api/membres/en-attente:
+ *   get:
+ *     summary: Liste les comptes en attente de validation (trésorier)
+ *     tags: [Membres]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Liste des comptes à valider }
+ *       403: { description: Accès refusé (rôle trésorier requis) }
+ */
+router.get("/en-attente", authenticate, authorize("tresorier"), membreController.comptesEnAttente);
+
+/**
+ * @swagger
+ * /api/membres/moi:
+ *   delete:
+ *     summary: Le membre connecté supprime définitivement son propre compte (RGPD)
+ *     tags: [Membres]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Compte supprimé }
+ *       401: { description: Non authentifié }
+ */
+router.delete("/moi", authenticate, membreController.supprimerMonCompte);
 
 /**
  * @swagger
@@ -118,6 +145,25 @@ router.patch("/:id/desactiver", authenticate, authorize("tresorier"), membreCont
  *       200: { description: Membre réactivé }
  */
 router.patch("/:id/reactiver", authenticate, authorize("tresorier"), membreController.reactiver);
+
+/**
+ * @swagger
+ * /api/membres/{id}/valider:
+ *   patch:
+ *     summary: Valide le compte d'un membre en attente (trésorier)
+ *     tags: [Membres]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200: { description: Compte validé, email de confirmation envoyé }
+ *       400: { description: Compte déjà validé ou introuvable }
+ */
+router.patch("/:id/valider", authenticate, authorize("tresorier"), membreController.validerCompte);
 
 /**
  * @swagger
